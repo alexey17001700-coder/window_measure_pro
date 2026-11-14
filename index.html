@@ -512,6 +512,8 @@ function renderStep(){
         <button onclick="stepNum(10)">+10</button>
       </div>
       ${st.hint?`<div class="hint">⚠️ ${st.hint}</div>`:''}`;
+  } else if(st.type==='info'){
+    body = `<div class="sum">` + st.items.map(i=>`<div class="sum-i"><b style="text-align:left;font-weight:600;font-size:13.5px">${i}</b></div>`).join('') + `</div>`;
   } else {
     body = `<input id="txtIn" class="num" style="width:100%;font-size:17px;font-weight:600;text-align:left;padding:16px;color:var(--txt)" type="${st.type}" value="${esc(D[st.key]||'')}" placeholder="${esc(st.ph||'')}" oninput="D['${st.key}']=this.value">`;
   }
