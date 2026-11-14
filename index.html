@@ -601,6 +601,28 @@ function renderSummary(){
   const yn = v => v==='❌'||v==='Не нужен'||v==='Не нужна'||v==='Нет'||v==='Нет, новый проём';
   const row = (l,v,cls) => `<div class="sum-i"><span>${l}</span><b class="${cls||''}">${esc(v||'—')}</b></div>`;
 
+  const isNew = D.workType==='Новое окно';
+  const isRubber = D.workType==='Замена резинок';
+  const isRepair = D.workType==='Ремонт окна';
+
+  let winRows = row('Тип',D.winType)+row('Профиль',D.mat)+row('Ширина',D.w?D.w+' см':'—')+row('Высота',D.h?D.h+' см':'—')+row('Створки',D.sashes);
+  if(isNew) winRows += row('Открывание',D.openDir)+row('Стеклопакет',D.glazing);
+  if(isRepair) winRows += row('Что ремонтируем',D.repairWhat);
+
+  let rubRows;
+  if(isNew){
+    rubRows = row('Статус','Новые, в комплекте','yes')+row('Комплектация',D.kit||'—','yes');
+  } else if(isRubber){
+    rubRows = row('Работа','Замена уплотнителя','yes')+row('Где меняем',D.rubberWhere)+row('Тип уплотнителя',D.rubberType)+row('Состояние старых',D.rubberState)+row('Длина',D.rubberMeters?D.rubberMeters+' м':'—');
+  } else {
+    rubRows = row('Состояние резинок',D.rubberState);
+  }
+
+  let extraRows = row('Этаж',D.floor?D.floor+' эт.':'—');
+  if(isNew){
+    extraRows = row('Подоконник',D.sill, yn(D.sill)?'no':'yes')+row('Откосы',D.slope, yn(D.slope)?'no':'yes')+row('Москитка',D.mosq, yn(D.mosq)?'no':'yes')+row('Демонтаж',D.demo)+row('Мусор',D.waste)+row('Этаж',D.floor?D.floor+' эт.':'—')+row('Подъём',D.lift);
+  }
+
   $('#screen').innerHTML = `
     <div class="card">
       <div class="q-ico">📋</div>
@@ -615,33 +637,17 @@ function renderSummary(){
         ${row('Объект',D.objType)}
       </div>
 
+      <div class="sec-t">Вид работ</div>
+      <div class="sum">${row('Работа',D.workType)}</div>
+
       <div class="sec-t">Окно</div>
-      <div class="sum">
-        ${row('Тип',D.winType)}
-        ${row('Профиль',D.mat)}
-        ${row('Ширина',D.w?D.w+' см':'—')}
-        ${row('Высота',D.h?D.h+' см':'—')}
-        ${row('Створки',D.sashes)}
-        ${row('Открывание',D.openDir)}
-        ${row('Стеклопакет',D.glazing)}
-      </div>
+      <div class="sum">${winRows}</div>
 
       <div class="sec-t">Резинки (уплотнитель)</div>
-      <div class="sum">
-        ${row('Решение',D.rubber, yn(D.rubber)?'no':'yes')}
-        ${row('Состояние',D.rubberState)}
-      </div>
+      <div class="sum">${rubRows}</div>
 
       <div class="sec-t">Дополнительно</div>
-      <div class="sum">
-        ${row('Подоконник',D.sill, yn(D.sill)?'no':'yes')}
-        ${row('Откосы',D.slope, yn(D.slope)?'no':'yes')}
-        ${row('Москитка',D.mosq, yn(D.mosq)?'no':'yes')}
-        ${row('Демонтаж',D.demo)}
-        ${row('Мусор',D.waste)}
-        ${row('Этаж',D.floor?D.floor+' эт.':'—')}
-        ${row('Подъём',D.lift)}
-      </div>
+      <div class="sum">${extraRows}</div>
 
       ${D.notes&&D.notes!=='—'?`<div class="sec-t">Заметки</div><div class="sum">${row('Мастер',D.notes)}</div>`:''}
 
