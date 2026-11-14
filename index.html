@@ -843,6 +843,7 @@ function goShare(mode, phone){
 function resetAll(){
   ask('🆕','Начать новый замер?','Все текущие данные будут стёрты.','','', '🆕 Начать', ()=>{
     Object.keys(D).forEach(k=>D[k]='');
+    buildSteps();
     cur=0; screen='wizard'; render(); toast('Новый замер');
   }, true);
 }
