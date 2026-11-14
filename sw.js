@@ -1,4 +1,4 @@
-const CACHE = 'wmpro-v2';
+const CACHE = 'wmpro-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icons/icon.svg'];
 
 self.addEventListener('install', e => {
