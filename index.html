@@ -563,6 +563,7 @@ function pick(key,val){
 function validate(){
   const st = STEPS[cur];
   if(st.optional) return true;
+  if(st.type==='info') return true;
   const v = D[st.key];
   if(v===''||v==null){ toast('⚠️ Сначала ответь на вопрос'); return false; }
   if(st.type==='num'){
