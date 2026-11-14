@@ -612,7 +612,7 @@ function renderSummary(){
 
   let rubRows;
   if(isNew){
-    rubRows = row('Статус','Новые, в комплекте','yes')+row('Комплектация',D.kit||'—','yes');
+    rubRows = row('Окно','Новое, устанавливается','yes')+row('Уплотнитель (резинки)','Новые, в комплекте','yes')+row('Фурнитура / стеклопакет','Новые, в комплекте','yes')+row('Подтверждение',D.kit||'—','yes');
   } else if(isRubber){
     rubRows = row('Работа','Замена уплотнителя','yes')+row('Где меняем',D.rubberWhere)+row('Тип уплотнителя',D.rubberType)+row('Состояние старых',D.rubberState)+row('Длина',D.rubberMeters?D.rubberMeters+' м':'—');
   } else {
