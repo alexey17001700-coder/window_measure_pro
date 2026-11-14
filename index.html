@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0e17">
+<title>Замер PRO — помощник замерщика</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e17;
+  --bg2:#0f1524;
+  --card:rgba(255,255,255,.045);
+  --card2:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.10);
+  --gold:#e8c37a;
+  --gold2:#f6e3b4;
+  --ice:#7fd8ff;
+  --ice2:#bff0ff;
+  --txt:#eef3fb;
+  --dim:#8b98ad;
+  --ok:#4ade80;
+  --warn:#fbbf24;
+  --bad:#f87171;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:
+    radial-gradient(1100px 700px at 15% -10%, rgba(127,216,255,.10), transparent 60%),
+    radial-gradient(900px 600px at 95% 5%, rgba(232,195,122,.10), transparent 60%),
+    linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
+  background-attachment:fixed;
+  color:var(--txt);
+  font-family:'Manrope',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden;
+  min-height:100%;
+}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:1}
+.wrap{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:14px 14px 120px}
+
+/* ---------- HEADER ---------- */
+.hdr{display:flex;align-items:center;gap:12px;padding:10px 4px 16px}
+.logo{
+  width:52px;height:52px;border-radius:16px;flex:0 0 52px;
+  background:linear-gradient(145deg,#1b2436,#0d1320);
+  border:1px solid rgba(232,195,122,.35);
+  display:grid;place-items:center;font-size:26px;
+  box-shadow:0 8px 26px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.hdr h1{
+  margin:0;font-family:'Playfair Display',serif;font-size:22px;font-weight:900;letter-spacing:.4px;
+  background:linear-gradient(92deg,var(--gold2),var(--gold) 40%,var(--ice2) 90%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hdr p{margin:2px 0 0;font-size:11.5px;color:var(--dim);letter-spacing:.3px}
+.ver{margin-left:auto;font-size:10px;color:var(--gold);border:1px solid rgba(232,195,122,.3);padding:3px 8px;border-radius:20px;white-space:nowrap}
+
+/* ---------- PROGRESS ---------- */
+.prog{margin:0 0 16px}
+.prog-top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-bottom:7px}
+.prog-top b{color:var(--gold)}
+.bar{height:7px;border-radius:20px;background:rgba(255,255,255,.07);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;border-radius:20px;background:linear-gradient(90deg,var(--ice),var(--gold));transition:width .45s cubic-bezier(.4,0,.2,1);box-shadow:0 0 14px rgba(127,216,255,.5)}
+
+/* ---------- CARD ---------- */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 18px 44px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05);
+  animation:pop .35s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.q-ico{font-size:34px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 14px rgba(127,216,255,.45))}
+.q-t{font-size:19px;font-weight:800;line-height:1.3;margin:0 0 6px}
+.q-s{font-size:13px;color:var(--dim);line-height:1.5;margin:0 0 16px}
+.q-s b{color:var(--ice)}
+
+/* ---------- OPTIONS ---------- */
+.opts{display:grid;gap:10px}
+.opt{
+  display:flex;align-items:center;gap:13px;padding:14px 15px;border-radius:16px;cursor:pointer;
+  background:var(--card2);border:1.5px solid var(--line);transition:.2s;text-align:left;color:var(--txt);
+  font-family:inherit;font-size:15px;font-weight:600;width:100%;
+}
+.opt:active{transform:scale(.975)}
+.opt .oi{font-size:24px;flex:0 0 30px;text-align:center}
+.opt .ot{flex:1}
+.opt .ot small{display:block;font-size:11.5px;color:var(--dim);font-weight:500;margin-top:2px}
+.opt .chk{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex:0 0 24px;display:grid;place-items:center;font-size:13px;color:transparent;transition:.2s}
+.opt.sel{border-color:var(--gold);background:linear-gradient(135deg,rgba(232,195,122,.16),rgba(127,216,255,.07));box-shadow:0 0 22px rgba(232,195,122,.18)}
+.opt.sel .chk{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:var(--gold);color:#1a1206}
+
+/* ---------- NUM INPUT ---------- */
+.num{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+.num input{
+  flex:1;background:rgba(0,0,0,.35);border:1.5px solid var(--line);border-radius:16px;
+  padding:16px;font-size:30px;font-weight:800;color:var(--ice2);text-align:center;font-family:inherit;
+  outline:none;transition:.2s;min-width:0;
+}
+.num input:focus{border-color:var(--gold);box-shadow:0 0 22px rgba(232,195,122,.22)}
+.num .unit{font-size:15px;color:var(--dim);font-weight:700;flex:0 0 auto}
+.stepper{display:flex;gap:10px;margin-top:12px}
+.stepper button{
+  flex:1;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);
+  color:var(--txt);font-size:20px;font-weight:800;font-family:inherit;cursor:pointer;transition:.15s;
+}
+.stepper button:active{transform:scale(.95);background:rgba(232,195,122,.15)}
+.hint{margin-top:12px;font-size:12px;color:var(--warn);background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.25);padding:10px 12px;border-radius:12px;line-height:1.5}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  width:100%;padding:17px;border-radius:17px;border:none;font-family:inherit;font-size:16px;font-weight:800;
+  cursor:pointer;transition:.2s;letter-spacing:.2px;
+}
+.btn:active{transform:scale(.975)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206;box-shadow:0 10px 28px rgba(232,195,122,.3)}
+.btn-ice{background:linear-gradient(135deg,#2b6f8f,var(--ice));color:#04141d;box-shadow:0 10px 28px rgba(127,216,255,.25)}
+.btn-ghost{background:var(--card2);border:1.5px solid var(--line);color:var(--txt)}
+.btn-bad{background:rgba(248,113,113,.14);border:1.5px solid rgba(248,113,113,.4);color:#fca5a5}
+.btn-ok{background:linear-gradient(135deg,#22c55e,#4ade80);color:#04180c}
+.btn:disabled{opacity:.4;pointer-events:none}
+.row{display:flex;gap:10px;margin-top:16px}
+.row .btn{flex:1}
+
+/* ---------- CONFIRM MODAL ---------- */
+.ovl{position:fixed;inset:0;background:rgba(4,7,13,.82);backdrop-filter:blur(6px);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+.ovl.on{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{
+  width:100%;max-width:400px;background:linear-gradient(180deg,#141c2c,#0d1320);
+  border:1px solid rgba(232,195,122,.3);border-radius:24px;padding:22px;
+  box-shadow:0 26px 70px rgba(0,0,0,.7);animation:pop .3s cubic-bezier(.2,.9,.3,1.2);
+}
+.modal .mi{font-size:40px;text-align:center;margin-bottom:8px}
+.modal h3{margin:0 0 8px;font-size:19px;text-align:center;font-weight:800}
+.modal p{margin:0 0 6px;font-size:14px;color:var(--dim);text-align:center;line-height:1.55}
+.modal .val{
+  margin:14px 0 4px;padding:14px;border-radius:14px;text-align:center;font-size:19px;font-weight:800;
+  background:rgba(127,216,255,.09);border:1px solid rgba(127,216,255,.25);color:var(--ice2);line-height:1.4;
+}
+.modal .val small{display:block;font-size:11.5px;color:var(--dim);font-weight:600;margin-top:4px}
+
+/* ---------- SUMMARY ---------- */
+.sum{display:grid;gap:8px;margin:4px 0 16px}
+.sum-i{display:flex;justify-content:space-between;gap:12px;padding:11px 13px;border-radius:13px;background:var(--card2);border:1px solid var(--line);font-size:13.5px}
+.sum-i span{color:var(--dim);flex:0 0 auto}
+.sum-i b{text-align:right;font-weight:700}
+.sum-i b.no{color:var(--bad)}
+.sum-i b.yes{color:var(--ok)}
+.sec-t{font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sec-t:before{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,195,122,.4),transparent)}
+.sec-t:after{content:'';flex:1;height:1px;background:linear-gradient(270deg,rgba(232,195,122,.4),transparent)}
+
+/* ---------- HISTORY ---------- */
+.h-item{padding:14px;border-radius:16px;background:var(--card2);border:1px solid var(--line);margin-bottom:10px}
+.h-item .ht{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.h-item .hn{font-weight:800;font-size:15px}
+.h-item .hd{font-size:11.5px;color:var(--dim);margin-top:3px}
+.h-item .hb{display:flex;gap:8px;margin-top:12px}
+.h-item .hb button{flex:1;padding:10px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.h-item .hb button:active{transform:scale(.96)}
+
+/* ---------- TOAST ---------- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,120px);z-index:90;background:linear-gradient(135deg,#1b2436,#0d1320);border:1px solid rgba(232,195,122,.4);color:var(--txt);padding:13px 20px;border-radius:16px;font-size:13.5px;font-weight:600;box-shadow:0 14px 40px rgba(0,0,0,.6);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);max-width:88vw;text-align:center}
+#toast.on{transform:translate(-50%,0)}
+
+/* ---------- HELP FAB ---------- */
+.fab{position:fixed;right:16px;bottom:16px;z-index:50;width:52px;height:52px;border-radius:50%;border:1px solid rgba(232,195,122,.4);background:linear-gradient(145deg,#1b2436,#0d1320);color:var(--gold);font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+.fab:active{transform:scale(.92)}
+
+/* ---------- TOUR ---------- */
+.tour{position:fixed;inset:0;z-index:80;background:rgba(4,7,13,.9);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:22px}
+.tour.on{display:flex}
+.tour-c{width:100%;max-width:400px;background:linear-gradient(180deg,#141c2c,#0d1320);border:1px solid rgba(232,195,122,.3);border-radius:26px;padding:26px 22px;text-align:center;box-shadow:0 26px 70px rgba(0,0,0,.7)}
+.tour-c .ti{font-size:52px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(127,216,255,.5))}
+.tour-c h3{margin:0 0 10px;font-size:20px;font-weight:800}
+.tour-c p{margin:0;font-size:14px;color:var(--dim);line-height:1.6}
+.dots{display:flex;gap:7px;justify-content:center;margin:20px 0 18px}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:.25s}
+.dots i.on{background:var(--gold);width:22px;border-radius:20px}
+.tour-x{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer}
+.tour-nav{display:flex;gap:10px}
+.tour-nav .btn{flex:1;padding:14px;font-size:14px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo">📐</div>
+    <div>
+      <h1>Замер PRO</h1>
+      <p>Пошаговый помощник замерщика окон</p>
+    </div>
+    <div class="ver">v1</div>
+  </div>
+
+  <div class="prog" id="prog">
+    <div class="prog-top"><span>Шаг <b id="pNow">1</b> из <b id="pAll">12</b></span><span id="pPct">0%</span></div>
+    <div class="bar"><i id="pBar"></i></div>
+  </div>
+
+  <div id="screen"></div>
+</div>
+
+<button class="fab" onclick="startTour()">?</button>
+
+<div class="ovl" id="ovl"><div class="modal" id="modal"></div></div>
+<div class="tour" id="tour"><button class="tour-x" onclick="endTour()">✕</button><div class="tour-c" id="tourC"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   ЗАМЕР PRO — пошаговый помощник замерщика
+   Каждое действие подтверждается. Ничего не пропустить.
+   ============================================================ */
+
+/* ---------- СОСТОЯНИЕ ---------- */
+const D = {
+  client:'', phone:'', addr:'',
+  objType:'',      // тип объекта
+  winType:'',      // тип окна
+  mat:'',          // материал профиля
+  w:'', h:'',      // размеры проёма
+  wOut:'', hOut:'',// размеры по наружке
+  sashes:'',       // створки
+  openDir:'',      // открывание
+  glazing:'',      // стеклопакет
+  rubber:'',       // резинки (уплотнитель)
+  rubberState:'',  // состояние резинок
+  sill:'',         // подоконник
+  sillLen:'',
+  slope:'',        // откосы
+  slopeLen:'',
+  mosq:'',         // москитка
+  demo:'',         // демонтаж
+  waste:'',        // вывоз мусора
+  floor:'',        // этаж
+  lift:'',         // подъём
+  notes:''
+};
+
+const STEPS = [
+  {k:'client',  ico:'👤', t:'Кто клиент?',            s:'Введи имя заказчика. Это попадёт в смету и в отчёт.', type:'text', ph:'Например: Иванов Иван', key:'client'},
+  {k:'phone',   ico:'📞', t:'Телефон клиента',        s:'Введи номер. Проверь цифры — по нему будем звонить.', type:'tel', ph:'+7 900 000-00-00', key:'phone'},
+  {k:'addr',    ico:'📍', t:'Адрес объекта',          s:'Улица, дом, квартира. Куда ехать на монтаж.', type:'text', ph:'г. Саратов, ул. Ленина 15, кв. 42', key:'addr'},
+  {k:'objType', ico:'🏠', t:'Что за объект?',         s:'От этого зависит доступ, подъём и сложность работ.', type:'opt', key:'objType', opts:[
+      {v:'Квартира', i:'🏢', d:'Жилой дом, есть лифт или лестница'},
+      {v:'Частный дом', i:'🏡', d:'Свой дом, обычно 1–2 этажа'},
+      {v:'Офис', i:'🏬', d:'Коммерческое помещение, рабочие часы'},
+      {v:'Магазин', i:'🛒', d:'Витрины, входная группа'},
+      {v:'Дача', i:'🌳', d:'Сезонное, может не быть отопления'}
+  ]},
+  {k:'winType', ico:'🪟', t:'Тип окна',               s:'Что именно меняем или ставим?', type:'opt', key:'winType', opts:[
+      {v:'Одностворчатое', i:'▯', d:'1 створка, глухое или открывное'},
+      {v:'Двустворчатое', i:'▯▯', d:'2 створки, самая частая'},
+      {v:'Трёхстворчатое', i:'▯▯▯', d:'3 створки, большие проёмы'},
+      {v:'Балконный блок', i:'🚪', d:'Окно + балконная дверь'},
+      {v:'Витраж / панорама', i:'🏙️', d:'Большое остекление'},
+      {v:'Дверь ПВХ', i:'🚪', d:'Входная или балконная дверь'}
+  ]},
+  {k:'mat',     ico:'🧱', t:'Материал профиля',       s:'Из чего делать окно?', type:'opt', key:'mat', opts:[
+      {v:'ПВХ (пластик)', i:'⬜', d:'Стандарт, тёплый, недорого'},
+      {v:'Алюминий', i:'🔩', d:'Холодный/тёплый, для витражей'},
+      {v:'Дерево', i:'🪵', d:'Премиум, эко, дорого'}
+  ]},
+  {k:'w',       ico:'📏', t:'Ширина проёма',          s:'Замерь <b>ширину</b> проёма в самой широкой точке. Сантиметры!', type:'num', key:'w', unit:'см', min:30, max:600, hint:'Мерить в 3 точках: сверху, посередине, снизу. Берём МИНИМУМ!'},
+  {k:'h',       ico:'📐', t:'Высота проёма',          s:'Замерь <b>высоту</b> проёма в самой низкой точке. Сантиметры!', type:'num', key:'h', unit:'см', min:30, max:400, hint:'Мерить слева, по центру, справа. Берём МИНИМУМ!'},
+  {k:'sashes',  ico:'🚪', t:'Сколько створок?',       s:'Посчитай створки. Глухие тоже считаются!', type:'opt', key:'sashes', opts:[
+      {v:'1 створка', i:'1️⃣', d:'Одна, обычно открывная'},
+      {v:'2 створки', i:'2️⃣', d:'Классика: глухая + открывная'},
+      {v:'3 створки', i:'3️⃣', d:'Глухая + открывная + глухая'},
+      {v:'4 створки', i:'4️⃣', d:'Широкий проём'},
+      {v:'5 и более', i:'🔢', d:'Витраж, уточнить у клиента'}
+  ]},
+  {k:'openDir', ico:'↔️', t:'Как открывается?',       s:'Куда открывается створка? Проверь на месте!', type:'opt', key:'openDir', opts:[
+      {v:'Поворотно-откидная', i:'🔄', d:'Открывается и наклоняется — самая удобная'},
+      {v:'Только поворотная', i:'↩️', d:'Открывается в сторону'},
+      {v:'Только откидная', i:'⬆️', d:'Только наклон сверху (форточка)'},
+      {v:'Глухая', i:'🔒', d:'Не открывается вообще'},
+      {v:'Раздвижная', i:'↔️', d:'Сдвигается в сторону'}
+  ]},
+  {k:'glazing', ico:'💎', t:'Стеклопакет',            s:'Сколько камер в стеклопакете?', type:'opt', key:'glazing', opts:[
+      {v:'Однокамерный', i:'1️⃣', d:'2 стекла. Холодный, для дачи/балкона'},
+      {v:'Двухкамерный', i:'2️⃣', d:'3 стекла. Стандарт для квартиры'},
+      {v:'Трёхкамерный', i:'3️⃣', d:'4 стекла. Тёплый, для севера'},
+      {v:'Энергосберегающий', i:'🌡️', d:'С напылением, экономит тепло'},
+      {v:'Не знаю', i:'❓', d:'Уточнить у поставщика'}
+  ]},
+  {k:'rubber',  ico:'🧵', t:'РЕЗИНКИ (уплотнитель)',  s:'<b>Главный вопрос!</b> Резинки (уплотнитель) по контуру — есть или менять?', type:'opt', key:'rubber', opts:[
+      {v:'Новые резинки', i:'✅', d:'Ставим новый уплотнитель по всему контуру'},
+      {v:'Старые оставить', i:'♻️', d:'Резинки в порядке, не трогаем'},
+      {v:'Менять частично', i:'⚠️', d:'Только там, где порваны/дуют'},
+      {v:'Резинок нет', i:'❌', d:'Голый профиль, обязательно добавить'}
+  ]},
+  {k:'rubberState', ico:'🔍', t:'Состояние резинок',  s:'Осмотри резинки: порваны, задубели, отходят?', type:'opt', key:'rubberState', opts:[
+      {v:'Целые, эластичные', i:'👍', d:'Всё хорошо'},
+      {v:'Задубели / потрескались', i:'🥶', d:'Потеряли эластичность, дует'},
+      {v:'Порваны / отходят', i:'🩹', d:'Требуют замены'},
+      {v:'Продувает из-под резинки', i:'💨', d:'Нужна регулировка + замена'}
+  ]},
+  {k:'sill',    ico:'🪵', t:'Подоконник',             s:'Нужен подоконник? Замерь длину.', type:'opt', key:'sill', opts:[
+      {v:'Нужен новый', i:'✅', d:'Ставим новый подоконник'},
+      {v:'Оставить старый', i:'♻️', d:'Старый в порядке'},
+      {v:'Не нужен', i:'❌', d:'Без подоконника'}
+  ]},
+  {k:'slope',   ico:'📐', t:'Откосы',                 s:'Отделка откосов нужна?', type:'opt', key:'slope', opts:[
+      {v:'Нужны новые', i:'✅', d:'Штукатурка или пластик'},
+      {v:'Оставить старые', i:'♻️', d:'Не трогаем'},
+      {v:'Не нужны', i:'❌', d:'Без откосов'}
+  ]},
+  {k:'mosq',    ico:'🦟', t:'Москитная сетка',        s:'Нужна защита от комаров?', type:'opt', key:'mosq', opts:[
+      {v:'Нужна', i:'✅', d:'Ставим москитную сетку'},
+      {v:'Не нужна', i:'❌', d:'Клиент отказался'},
+      {v:'Уже есть', i:'♻️', d:'Своя, ставить не надо'}
+  ]},
+  {k:'demo',    ico:'🔨', t:'Демонтаж старого',       s:'Старое окно снимаем?', type:'opt', key:'demo', opts:[
+      {v:'Да, демонтаж', i:'🔨', d:'Снимаем старое окно'},
+      {v:'Нет, новый проём', i:'🆕', d:'Проём пустой, снимать нечего'},
+      {v:'Частичный демонтаж', i:'🧰', d:'Только часть конструкции'}
+  ]},
+  {k:'waste',   ico:'🚛', t:'Вывоз мусора',           s:'Кто вывозит старое окно и мусор?', type:'opt', key:'waste', opts:[
+      {v:'Мы вывозим', i:'🚛', d:'Включить в смету'},
+      {v:'Клиент сам', i:'🙋', d:'Клиент вывезет сам'},
+      {v:'Мусора нет', i:'✨', d:'Нечего вывозить'}
+  ]},
+  {k:'floor',   ico:'🏗️', t:'Этаж',                   s:'На каком этаже объект?', type:'num', key:'floor', unit:'эт.', min:1, max:50, hint:'Выше 5-го этажа — часто нужен подъём материала.'},
+  {k:'lift',    ico:'🛗', t:'Подъём материала',       s:'Как поднимаем окно на этаж?', type:'opt', key:'lift', opts:[
+      {v:'Лифт есть', i:'🛗', d:'Поднимаем на лифте'},
+      {v:'Лестница', i:'🪜', d:'Носим руками по лестнице'},
+      {v:'Кран / лебёдка', i:'🏗️', d:'Нужна техника, дорого'},
+      {v:'Первый этаж', i:'🚪', d:'Подъём не нужен'}
+  ]},
+  {k:'notes',   ico:'📝', t:'Заметки мастера',        s:'Что ещё важно? Особые условия, пожелания клиента.', type:'text', ph:'Например: кот на подоконнике, не курить', key:'notes', optional:true}
+];
+
+let cur = 0;
+let screen = 'wizard';
+
+/* ---------- УТИЛИТЫ ---------- */
+const $ = s => document.querySelector(s);
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400)}
+
+/* ---------- ПОДТВЕРЖДЕНИЕ ---------- */
+let confirmCb = null;
+function ask(ico,title,text,val,valSub,okTxt,cb,badTxt){
+  confirmCb = cb;
+  $('#modal').innerHTML = `
+    <div class="mi">${ico}</div>
+    <h3>${title}</h3>
+    <p>${text}</p>
+    ${val?`<div class="val">${esc(val)}${valSub?`<small>${esc(valSub)}</small>`:''}</div>`:''}
+    <div class="row">
+      <button class="btn btn-ghost" onclick="closeAsk()">↩ Исправить</button>
+      <button class="btn ${badTxt?'btn-bad':'btn-ok'}" onclick="doConfirm()">${okTxt}</button>
+    </div>`;
+  $('#ovl').classList.add('on');
+}
+function closeAsk(){ $('#ovl').classList.remove('on'); confirmCb=null; }
+function doConfirm(){ const cb=confirmCb; closeAsk(); if(cb) cb(); }
+
+/* ---------- РЕНДЕР ---------- */
+function render(){
+  if(screen==='wizard') return renderStep();
+  if(screen==='summary') return renderSummary();
+  if(screen==='history') return renderHistory();
+}
+
+function renderStep(){
+  const st = STEPS[cur];
+  const total = STEPS.length;
+  $('#prog').classList.remove('hide');
+  $('#pNow').textContent = cur+1;
+  $('#pAll').textContent = total;
+  const pct = Math.round((cur/total)*100);
+  $('#pPct').textContent = pct+'%';
+  $('#pBar').style.width = pct+'%';
+
+  let body = '';
+  if(st.type==='opt'){
+    body = `<div class="opts">` + st.opts.map(o=>`
+      <button class="opt ${D[st.key]===o.v?'sel':''}" onclick="pick('${st.key}','${esc(o.v).replace(/'/g,"\\'")}')">
+        <span class="oi">${o.i}</span>
+        <span class="ot">${esc(o.v)}<small>${esc(o.d)}</small></span>
+        <span class="chk">✓</span>
+      </button>`).join('') + `</div>`;
+  } else if(st.type==='num'){
+    body = `
+      <div class="num">
+        <input id="numIn" type="number" inputmode="numeric" value="${esc(D[st.key]||'')}" placeholder="0" oninput="onNum(this)">
+        <span class="unit">${st.unit}</span>
+      </div>
+      <div class="stepper">
+        <button onclick="stepNum(-10)">−10</button>
+        <button onclick="stepNum(-1)">−1</button>
+        <button onclick="stepNum(1)">+1</button>
+        <button onclick="stepNum(10)">+10</button>
+      </div>
+      ${st.hint?`<div class="hint">⚠️ ${st.hint}</div>`:''}`;
+  } else {
+    body = `<input id="txtIn" class="num" style="width:100%;font-size:17px;font-weight:600;text-align:left;padding:16px;color:var(--txt)" type="${st.type}" value="${esc(D[st.key]||'')}" placeholder="${esc(st.ph||'')}" oninput="D['${st.key}']=this.value">`;
+  }
+
+  $('#screen').innerHTML = `
+    <div class="card">
+      <div class="q-ico">${st.ico}</div>
+      <h2 class="q-t">${st.t}</h2>
+      <p class="q-s">${st.s}</p>
+      ${body}
+      <div class="row">
+        ${cur>0?`<button class="btn btn-ghost" style="flex:0 0 34%" onclick="prev()">← Назад</button>`:''}
+        <button class="btn btn-gold" onclick="next()">${cur===STEPS.length-1?'📋 К итогу':'Подтвердить →'}</button>
+      </div>
+      ${st.optional?`<button class="btn btn-ghost" style="margin-top:10px" onclick="skip()">Пропустить шаг</button>`:''}
+    </div>`;
+
+  if(st.type==='num') setTimeout(()=>{const i=$('#numIn'); if(i) i.focus();},120);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function onNum(el){
+  const st = STEPS[cur];
+  let v = el.value.replace(/[^\d.]/g,'');
+  D[st.key]=v;
+}
+function stepNum(d){
+  const st = STEPS[cur];
+  let v = parseFloat(D[st.key]||0)+d;
+  if(v<0) v=0;
+  D[st.key]=String(Math.round(v*10)/10);
+  const i=$('#numIn'); if(i) i.value=D[st.key];
+}
+
+/* ---------- ВЫБОР ОПЦИИ → ПОДТВЕРЖДЕНИЕ ---------- */
+function pick(key,val){
+  const st = STEPS[cur];
+  const o = st.opts.find(x=>x.v===val);
+  ask(st.ico, 'Подтверди выбор', st.t, val, o?o.d:'', '✓ Верно, дальше', ()=>{
+    D[key]=val;
+    toast('Записано: '+val);
+    next();
+  });
+}
+
+/* ---------- НАВИГАЦИЯ ---------- */
+function validate(){
+  const st = STEPS[cur];
+  if(st.optional) return true;
+  const v = D[st.key];
+  if(v===''||v==null){ toast('⚠️ Сначала ответь на вопрос'); return false; }
+  if(st.type==='num'){
+    const n = parseFloat(v);
+    if(isNaN(n)){ toast('⚠️ Введи число'); return false; }
+    if(st.min!=null && n<st.min){ toast('⚠️ Минимум '+st.min+' '+st.unit); return false; }
+    if(st.max!=null && n>st.max){ toast('⚠️ Максимум '+st.max+' '+st.unit+' — проверь замер!'); return false; }
+  }
+  return true;
+}
+function next(){
+  if(!validate()) return;
+  const st = STEPS[cur];
+  if(st.type!=='opt'){
+    ask(st.ico,'Проверь ответ',st.t,D[st.key],st.unit||'', '✓ Верно, дальше', ()=>{ goNext(); });
+  } else goNext();
+}
+function goNext(){
+  if(cur<STEPS.length-1){ cur++; render(); }
+  else { screen='summary'; render(); }
+}
+function prev(){ if(cur>0){cur--; render();} }
+function skip(){ D[STEPS[cur].key]='—'; goNext(); }
+
+/* ---------- ИТОГ ---------- */
+function renderSummary(){
+  $('#prog').classList.remove('hide');
+  $('#pNow').textContent = STEPS.length;
+  $('#pPct').textContent='100%';
+  $('#pBar').style.width='100%';
+
+  const yn = v => v==='❌'||v==='Не нужен'||v==='Не нужна'||v==='Нет'||v==='Нет, новый проём';
+  const row = (l,v,cls) => `<div class="sum-i"><span>${l}</span><b class="${cls||''}">${esc(v||'—')}</b></div>`;
+
+  $('#screen').innerHTML = `
+    <div class="card">
+      <div class="q-ico">📋</div>
+      <h2 class="q-t">Замер готов!</h2>
+      <p class="q-s">Проверь всё внимательно. Ниже — полная карточка замера.</p>
+
+      <div class="sec-t">Клиент</div>
+      <div class="sum">
+        ${row('Имя',D.client)}
+        ${row('Телефон',D.phone)}
+        ${row('Адрес',D.addr)}
+        ${row('Объект',D.objType)}
+      </div>
+
+      <div class="sec-t">Окно</div>
+      <div class="sum">
+        ${row('Тип',D.winType)}
+        ${row('Профиль',D.mat)}
+        ${row('Ширина',D.w?D.w+' см':'—')}
+        ${row('Высота',D.h?D.h+' см':'—')}
+        ${row('Створки',D.sashes)}
+        ${row('Открывание',D.openDir)}
+        ${row('Стеклопакет',D.glazing)}
+      </div>
+
+      <div class="sec-t">Резинки (уплотнитель)</div>
+      <div class="sum">
+        ${row('Решение',D.rubber, yn(D.rubber)?'no':'yes')}
+        ${row('Состояние',D.rubberState)}
+      </div>
+
+      <div class="sec-t">Дополнительно</div>
+      <div class="sum">
+        ${row('Подоконник',D.sill, yn(D.sill)?'no':'yes')}
+        ${row('Откосы',D.slope, yn(D.slope)?'no':'yes')}
+        ${row('Москитка',D.mosq, yn(D.mosq)?'no':'yes')}
+        ${row('Демонтаж',D.demo)}
+        ${row('Мусор',D.waste)}
+        ${row('Этаж',D.floor?D.floor+' эт.':'—')}
+        ${row('Подъём',D.lift)}
+      </div>
+
+      ${D.notes&&D.notes!=='—'?`<div class="sec-t">Заметки</div><div class="sum">${row('Мастер',D.notes)}</div>`:''}
+
+      <div class="row">
+        <button class="btn btn-ghost" style="flex:0 0 34%" onclick="backToWizard()">← Правки</button>
+        <button class="btn btn-gold" onclick="saveMeasure()">💾 Сохранить</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-ice" onclick="sendMeasure()">📤 Отправить клиенту</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="screen='history';render()">📚 История замеров</button>
+        <button class="btn btn-bad" onclick="resetAll()">🆕 Новый замер</button>
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function backToWizard(){ screen='wizard'; cur=STEPS.length-1; render(); }
+
+/* ---------- ТЕКСТ ЗАМЕРА ---------- */
+function measureText(){
+  const L = [];
+  L.push('📐 КАРТОЧКА ЗАМЕРА ОКНА');
+  L.push('━━━━━━━━━━━━━━━━━━');
+  L.push('👤 Клиент: '+(D.client||'—'));
+  L.push('📞 Телефон: '+(D.phone||'—'));
+  L.push('📍 Адрес: '+(D.addr||'—'));
+  L.push('🏠 Объект: '+(D.objType||'—'));
+  L.push('');
+  L.push('🪟 ОКНО');
+  L.push('• Тип: '+(D.winType||'—'));
+  L.push('• Профиль: '+(D.mat||'—'));
+  L.push('• Размер проёма: '+(D.w||'?')+' × '+(D.h||'?')+' см');
+  L.push('• Створки: '+(D.sashes||'—'));
+  L.push('• Открывание: '+(D.openDir||'—'));
+  L.push('• Стеклопакет: '+(D.glazing||'—'));
+  L.push('');
+  L.push('🧵 РЕЗИНКИ (УПЛОТНИТЕЛЬ)');
+  L.push('• Решение: '+(D.rubber||'—'));
+  L.push('• Состояние: '+(D.rubberState||'—'));
+  L.push('');
+  L.push('🔧 ДОПОЛНИТЕЛЬНО');
+  L.push('• Подоконник: '+(D.sill||'—'));
+  L.push('• Откосы: '+(D.slope||'—'));
+  L.push('• Москитная сетка: '+(D.mosq||'—'));
+  L.push('• Демонтаж: '+(D.demo||'—'));
+  L.push('• Вывоз мусора: '+(D.waste||'—'));
+  L.push('• Этаж: '+(D.floor||'—'));
+  L.push('• Подъём: '+(D.lift||'—'));
+  if(D.notes&&D.notes!=='—'){ L.push(''); L.push('📝 Заметки: '+D.notes); }
+  L.push('');
+  L.push('━━━━━━━━━━━━━━━━━━');
+  L.push('Замер выполнен: '+new Date().toLocaleString('ru-RU'));
+  return L.join('\n');
+}
+
+/* ---------- СОХРАНЕНИЕ ---------- */
+function getHist(){ try{ return JSON.parse(localStorage.getItem('wm_hist')||'[]'); }catch(e){ return []; } }
+function setHist(a){ localStorage.setItem('wm_hist', JSON.stringify(a)); }
+
+function saveMeasure(){
+  ask('💾','Сохранить замер?','Карточка попадёт в историю на этом телефоне.', (D.client||'Без имени')+' · '+(D.w||'?')+'×'+(D.h||'?')+' см','', '💾 Сохранить', ()=>{
+    const h = getHist();
+    h.unshift({ id:Date.now(), d:JSON.parse(JSON.stringify(D)), t:new Date().toLocaleString('ru-RU') });
+    setHist(h);
+    toast('✅ Замер сохранён в историю');
+  });
+}
+
+function renderHistory(){
+  $('#prog').classList.add('hide');
+  const h = getHist();
+  $('#screen').innerHTML = `
+    <div class="card">
+      <div class="q-ico">📚</div>
+      <h2 class="q-t">История замеров</h2>
+      <p class="q-s">Всего сохранено: <b>${h.length}</b></p>
+      ${h.length? h.map(x=>`
+        <div class="h-item">
+          <div class="ht">
+            <div>
+              <div class="hn">${esc(x.d.client||'Без имени')}</div>
+              <div class="hd">${esc(x.d.winType||'—')} · ${esc(x.d.w||'?')}×${esc(x.d.h||'?')} см · ${esc(x.t)}</div>
+            </div>
+          </div>
+          <div class="hb">
+            <button onclick="openH(${x.id})">👁 Открыть</button>
+            <button onclick="sendH(${x.id})">📤 Отправить</button>
+            <button onclick="delH(${x.id})">🗑 Удалить</button>
+          </div>
+        </div>`).join('') : `<div class="hint">Пока пусто. Сделай замер и нажми «Сохранить».</div>`}
+      <div class="row">
+        <button class="btn btn-ghost" onclick="screen='summary';render()">← К замеру</button>
+        <button class="btn btn-ghost" onclick="exportH()">📦 Экспорт</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-bad" onclick="clearH()">🗑 Очистить историю</button>
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function openH(id){
+  const x = getHist().find(i=>i.id===id); if(!x) return;
+  ask('👁','Открыть замер?','Текущий незавершённый замер будет заменён.','', '', '👁 Открыть', ()=>{
+    Object.assign(D, x.d); screen='summary'; render(); toast('Замер открыт');
+  });
+}
+function sendH(id){
+  const x = getHist().find(i=>i.id===id); if(!x) return;
+  const save = JSON.parse(JSON.stringify(D));
+  Object.assign(D, x.d);
+  const txt = measureText();
+  Object.assign(D, save);
+  shareText(txt, x.d.phone);
+}
+function delH(id){
+  ask('🗑','Удалить замер?','Действие необратимо.','','', '🗑 Удалить', ()=>{
+    setHist(getHist().filter(i=>i.id!==id)); renderHistory(); toast('Удалено');
+  }, true);
+}
+function clearH(){
+  ask('🗑','Очистить всю историю?','Все сохранённые замеры будут удалены.','','', '🗑 Очистить', ()=>{
+    setHist([]); renderHistory(); toast('История очищена');
+  }, true);
+}
+function exportH(){
+  const data = JSON.stringify(getHist(),null,2);
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download = 'zamery_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); toast('📦 Файл выгружен');
+}
+
+/* ---------- ОТПРАВКА ---------- */
+function sendMeasure(){
+  ask('📤','Отправить клиенту?','Смета/карточка замера уйдёт выбранным способом.', D.client||'Без имени', D.phone||'', '📤 Отправить', ()=>{
+    shareText(measureText(), D.phone);
+  });
+}
+function shareText(txt, phone){
+  const clean = String(phone||'').replace(/[^\d]/g,'');
+  $('#modal').innerHTML = `
+    <div class="mi">📤</div>
+    <h3>Куда отправить?</h3>
+    <p>Выбери способ — текст уже готов.</p>
+    <div class="opts" style="margin-top:14px">
+      <button class="opt" onclick="goShare('wa','${clean}')"><span class="oi">💬</span><span class="ot">WhatsApp<small>Открыть чат с клиентом</small></span></button>
+      <button class="opt" onclick="goShare('tg')"><span class="oi">✈️</span><span class="ot">Telegram<small>Поделиться в Telegram</small></span></button>
+      <button class="opt" onclick="goShare('mail')"><span class="oi">✉️</span><span class="ot">E-mail<small>Отправить письмом</small></span></button>
+      <button class="opt" onclick="goShare('sms','${clean}')"><span class="oi">📱</span><span class="ot">SMS<small>Текстовое сообщение</small></span></button>
+      <button class="opt" onclick="goShare('sys')"><span class="oi">📲</span><span class="ot">Поделиться<small>Системное меню телефона</small></span></button>
+      <button class="opt" onclick="goShare('copy')"><span class="oi">📋</span><span class="ot">Скопировать<small>Текст в буфер обмена</small></span></button>
+    </div>
+    <div class="row"><button class="btn btn-ghost" onclick="closeAsk()">Отмена</button></div>`;
+  $('#ovl').classList.add('on');
+  window._shareTxt = txt;
+}
+function goShare(mode, phone){
+  const txt = window._shareTxt||'';
+  const enc = encodeURIComponent(txt);
+  closeAsk();
+  if(mode==='wa'){ window.open('https://wa.me/'+(phone||'')+'?text='+enc,'_blank'); }
+  else if(mode==='tg'){ window.open('https://t.me/share/url?url='+enc,'_blank'); }
+  else if(mode==='mail'){ window.location.href='mailto:?subject='+encodeURIComponent('Замер окна')+'&body='+enc; }
+  else if(mode==='sms'){ window.location.href='sms:'+(phone||'')+'?body='+enc; }
+  else if(mode==='sys'){
+    if(navigator.share){ navigator.share({title:'Замер окна', text:txt}).catch(()=>{}); }
+    else { navigator.clipboard.writeText(txt).then(()=>toast('📋 Скопировано')); }
+  }
+  else if(mode==='copy'){ navigator.clipboard.writeText(txt).then(()=>toast('📋 Скопировано в буфер')).catch(()=>toast('Не удалось скопировать')); }
+}
+
+/* ---------- СБРОС ---------- */
+function resetAll(){
+  ask('🆕','Начать новый замер?','Все текущие данные будут стёрты.','','', '🆕 Начать', ()=>{
+    Object.keys(D).forEach(k=>D[k]='');
+    cur=0; screen='wizard'; render(); toast('Новый замер');
+  }, true);
+}
+
+/* ---------- ТУР ---------- */
+const TOUR = [
+  {i:'📐',t:'Замер PRO',p:'Помощник замерщика окон. Ведёт по шагам и не даёт ничего забыть.'},
+  {i:'✅',t:'Каждое действие — с подтверждением',p:'Выбрал вариант — приложение переспросит: «Верно?». Ошибся — нажми «Исправить».'},
+  {i:'📏',t:'Размеры',p:'Ширина и высота проёма в сантиметрах. Мерить в 3 точках, брать минимум — приложение напомнит.'},
+  {i:'🧵',t:'РЕЗИНКИ — главное!',p:'Отдельные шаги про уплотнитель: менять или нет, и в каком он состоянии. Больше не забудешь.'},
+  {i:'🚪',t:'Створки и открывание',p:'Сколько створок, как открываются, какой стеклопакет — всё по шагам.'},
+  {i:'🔧',t:'Дополнительно',p:'Подоконник, откосы, москитка, демонтаж, вывоз мусора, этаж и подъём.'},
+  {i:'📤',t:'Отправка клиенту',p:'Готовая карточка замера уходит в WhatsApp, Telegram, на почту или SMS.'},
+  {i:'📚',t:'История',p:'Все замеры сохраняются в телефоне. Можно открыть, отправить или удалить.'}
+];
+let tIdx = 0;
+function startTour(){ tIdx=0; $('#tour').classList.add('on'); drawTour(); }
+function endTour(){ $('#tour').classList.remove('on'); localStorage.setItem('wm_tour','1'); }
+function drawTour(){
+  const s = TOUR[tIdx];
+  $('#tourC').innerHTML = `
+    <div class="ti">${s.i}</div>
+    <h3>${s.t}</h3>
+    <p>${s.p}</p>
+    <div class="dots">${TOUR.map((_,i)=>`<i class="${i===tIdx?'on':''}"></i>`).join('')}</div>
+    <div class="tour-nav">
+      ${tIdx>0?`<button class="btn btn-ghost" onclick="tIdx--;drawTour()">← Назад</button>`:''}
+      <button class="btn btn-gold" onclick="${tIdx===TOUR.length-1?'endTour()':'tIdx++;drawTour()'}">${tIdx===TOUR.length-1?'🚀 Начать работу':'Далее →'}</button>
+    </div>`;
+}
+
+/* ---------- СНЕЖИНКИ ---------- */
+(function(){
+  const c = $('#snow'), x = c.getContext('2d');
+  let W,H,fl=[];
+  function rs(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+  rs(); addEventListener('resize',rs);
+  for(let i=0;i<55;i++) fl.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2.2+.7,s:Math.random()*.5+.25,d:Math.random()*Math.PI*2});
+  function loop(){
+    x.clearRect(0,0,W,H);
+    fl.forEach(f=>{
+      f.y+=f.s; f.d+=.012; f.x+=Math.sin(f.d)*.5;
+      if(f.y>H+6){ f.y=-6; f.x=Math.random()*W; }
+      x.beginPath(); x.arc(f.x,f.y,f.r,0,7);
+      x.fillStyle='rgba(190,235,255,'+(.15+f.r/6)+')'; x.fill();
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ---------- СТАРТ ---------- */
+render();
+if(!localStorage.getItem('wm_tour')) setTimeout(startTour,700);
+</script>
+</body>
+</html>
