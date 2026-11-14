@@ -577,7 +577,9 @@ function validate(){
 function next(){
   if(!validate()) return;
   const st = STEPS[cur];
-  if(st.type!=='opt'){
+  if(st.type==='info'){
+    ask(st.ico,'Подтверди',st.t,'Комплект полный','Резинки новые, всё в комплекте','✓ Верно, дальше',()=>{ D[st.key]='Подтверждено'; goNext(); });
+  } else if(st.type!=='opt'){
     ask(st.ico,'Проверь ответ',st.t,D[st.key],st.unit||'', '✓ Верно, дальше', ()=>{ goNext(); });
   } else goNext();
 }
