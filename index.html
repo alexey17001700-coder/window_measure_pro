@@ -771,7 +771,7 @@ function renderHistory(){
 function openH(id){
   const x = getHist().find(i=>i.id===id); if(!x) return;
   ask('👁','Открыть замер?','Текущий незавершённый замер будет заменён.','', '', '👁 Открыть', ()=>{
-    Object.assign(D, x.d); screen='summary'; render(); toast('Замер открыт');
+    Object.assign(D, x.d); buildSteps(); screen='summary'; render(); toast('Замер открыт');
   });
 }
 function sendH(id){
