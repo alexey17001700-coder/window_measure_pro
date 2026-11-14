@@ -1,0 +1,14 @@
+{
+  "name": "Замер PRO — помощник замерщика",
+  "short_name": "Замер PRO",
+  "description": "Пошаговый помощник замерщика окон. Каждое действие с подтверждением.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0e17",
+  "theme_color": "#0a0e17",
+  "lang": "ru",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
