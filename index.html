@@ -677,26 +677,45 @@ function measureText(){
   L.push('📍 Адрес: '+(D.addr||'—'));
   L.push('🏠 Объект: '+(D.objType||'—'));
   L.push('');
+  L.push('🎯 ВИД РАБОТ: '+(D.workType||'—'));
+  L.push('');
   L.push('🪟 ОКНО');
   L.push('• Тип: '+(D.winType||'—'));
   L.push('• Профиль: '+(D.mat||'—'));
-  L.push('• Размер проёма: '+(D.w||'?')+' × '+(D.h||'?')+' см');
+  L.push('• Размер: '+(D.w||'?')+' × '+(D.h||'?')+' см');
   L.push('• Створки: '+(D.sashes||'—'));
-  L.push('• Открывание: '+(D.openDir||'—'));
-  L.push('• Стеклопакет: '+(D.glazing||'—'));
+  if(D.workType==='Новое окно'){
+    L.push('• Открывание: '+(D.openDir||'—'));
+    L.push('• Стеклопакет: '+(D.glazing||'—'));
+  }
+  if(D.workType==='Ремонт окна'){
+    L.push('• Что ремонтируем: '+(D.repairWhat||'—'));
+  }
   L.push('');
   L.push('🧵 РЕЗИНКИ (УПЛОТНИТЕЛЬ)');
-  L.push('• Решение: '+(D.rubber||'—'));
-  L.push('• Состояние: '+(D.rubberState||'—'));
+  if(D.workType==='Новое окно'){
+    L.push('• Новые, в комплекте с окном — менять не нужно');
+    L.push('• Комплектация: '+(D.kit||'—'));
+  } else if(D.workType==='Замена резинок'){
+    L.push('• Работа: замена уплотнителя');
+    L.push('• Где меняем: '+(D.rubberWhere||'—'));
+    L.push('• Тип уплотнителя: '+(D.rubberType||'—'));
+    L.push('• Состояние старых: '+(D.rubberState||'—'));
+    L.push('• Длина: '+(D.rubberMeters?D.rubberMeters+' м':'—'));
+  } else {
+    L.push('• Состояние: '+(D.rubberState||'—'));
+  }
   L.push('');
   L.push('🔧 ДОПОЛНИТЕЛЬНО');
-  L.push('• Подоконник: '+(D.sill||'—'));
-  L.push('• Откосы: '+(D.slope||'—'));
-  L.push('• Москитная сетка: '+(D.mosq||'—'));
-  L.push('• Демонтаж: '+(D.demo||'—'));
-  L.push('• Вывоз мусора: '+(D.waste||'—'));
+  if(D.workType==='Новое окно'){
+    L.push('• Подоконник: '+(D.sill||'—'));
+    L.push('• Откосы: '+(D.slope||'—'));
+    L.push('• Москитная сетка: '+(D.mosq||'—'));
+    L.push('• Демонтаж: '+(D.demo||'—'));
+    L.push('• Вывоз мусора: '+(D.waste||'—'));
+    L.push('• Подъём: '+(D.lift||'—'));
+  }
   L.push('• Этаж: '+(D.floor||'—'));
-  L.push('• Подъём: '+(D.lift||'—'));
   if(D.notes&&D.notes!=='—'){ L.push(''); L.push('📝 Заметки: '+D.notes); }
   L.push('');
   L.push('━━━━━━━━━━━━━━━━━━');
