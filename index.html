@@ -526,7 +526,7 @@ function renderStep(){
       ${body}
       <div class="row">
         ${cur>0?`<button class="btn btn-ghost" style="flex:0 0 34%" onclick="prev()">← Назад</button>`:''}
-        <button class="btn btn-gold" onclick="next()">${cur===STEPS.length-1?'📋 К итогу':'Подтвердить →'}</button>
+        <button class="btn btn-gold" onclick="next()">${cur===STEPS.length-1?'📋 К итогу':(st.confirmTxt||'Подтвердить →')}</button>
       </div>
       ${st.optional?`<button class="btn btn-ghost" style="margin-top:10px" onclick="skip()">Пропустить шаг</button>`:''}
     </div>`;
