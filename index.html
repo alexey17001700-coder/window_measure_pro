@@ -635,9 +635,13 @@ function renderSummary(){
     rubRows = row('Состояние резинок',D.rubberState);
   }
 
+  const sillInfo = D.sill==='Нужен новый'
+    ? 'Нужен новый · '+(D.sillLen||'?')+'×'+(D.sillDepth||'?')+' см'+(D.sillBrand?' · '+D.sillBrand:'')
+    : D.sill;
+
   let extraRows = row('Этаж',D.floor?D.floor+' эт.':'—');
   if(isNew){
-    extraRows = row('Подоконник',D.sill, yn(D.sill)?'no':'yes')+row('Откосы',D.slope, yn(D.slope)?'no':'yes')+row('Москитка',D.mosq, yn(D.mosq)?'no':'yes')+row('Демонтаж',D.demo)+row('Мусор',D.waste)+row('Этаж',D.floor?D.floor+' эт.':'—')+row('Подъём',D.lift);
+    extraRows = row('Подоконник',sillInfo, yn(D.sill)?'no':'yes')+row('Откосы',D.slope, yn(D.slope)?'no':'yes')+row('Москитка',D.mosq, yn(D.mosq)?'no':'yes')+row('Демонтаж',D.demo)+row('Мусор',D.waste)+row('Этаж',D.floor?D.floor+' эт.':'—')+row('Подъём',D.lift);
   }
 
   $('#screen').innerHTML = `
