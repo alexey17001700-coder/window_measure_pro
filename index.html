@@ -653,7 +653,9 @@ function renderSummary(){
   const isRubber = D.workType==='Замена резинок';
   const isRepair = D.workType==='Ремонт окна';
 
-  let winRows = row('Тип',D.winType)+row('Профиль',D.mat)+row('Ширина',D.w?D.w+' см':'—')+row('Высота',D.h?D.h+' см':'—')+row('Створки',D.sashes);
+  let winRows = row('Тип',D.winType)+row('Профиль',D.mat);
+  if(D.mat && String(D.mat).indexOf('ПВХ')===0) winRows += row('Марка профиля',D.profile);
+  winRows += row('Ширина',D.w?D.w+' см':'—')+row('Высота',D.h?D.h+' см':'—')+row('Створки',D.sashes);
   if(isNew) winRows += row('Открывание',D.openDir)+row('Стеклопакет',D.glazing);
   if(isRepair) winRows += row('Что ремонтируем',D.repairWhat);
 
