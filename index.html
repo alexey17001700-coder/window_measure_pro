@@ -363,19 +363,40 @@ const S_REPAIR = [
   {k:'notes',   ico:'📝', t:'Заметки мастера',        s:'Что ещё важно? Особые условия, пожелания клиента.', type:'text', ph:'Например: створка цепляет снизу', key:'notes', optional:true}
 ];
 
+/* Марка ПВХ-профиля — спрашиваем у любого ПВХ-изделия */
+const S_PROFILE = {k:'profile', ico:'🏭', t:'Марка профиля', s:'Выбери марку ПВХ-профиля. От неё зависят цена, тепло и тишина в доме.', type:'opt', key:'profile', opts:[
+    {v:'Novotex (Новотекс)', i:'💠', d:'Эконом · 3 камеры, 58 мм — бюджетный вариант'},
+    {v:'Proplex (Проплекс)', i:'💠', d:'Эконом · 3 камеры, 58 мм — недорого и надёжно'},
+    {v:'KBE Expert', i:'🔷', d:'Стандарт · 3 камеры, 58 мм — проверенная классика'},
+    {v:'Rehau Blitz', i:'🔷', d:'Стандарт · 3 камеры, 60 мм — тёплый и тихий'},
+    {v:'Veka Euroline', i:'🔷', d:'Стандарт · 3 камеры, 58 мм — ровный белый'},
+    {v:'Rehau Delight', i:'💎', d:'Премиум · 5 камер, 70 мм — максимум тепла'},
+    {v:'Veka Softline 82', i:'💎', d:'Премиум · 6 камер, 82 мм — для холодного климата'},
+    {v:'Salamander BluEvolution', i:'💎', d:'Премиум · 6 камер, 82 мм — топ по шумоизоляции'},
+    {v:'Montblanc (Монблан)', i:'💎', d:'Премиум · 5 камер, 70 мм — жёсткий и тёплый'},
+    {v:'Другая марка', i:'❓', d:'Уточнить у поставщика'}
+]};
+
 let STEPS = [];
 function buildSteps(){
   const w = D.workType;
-  if(w==='Замена резинок') STEPS = S_CLIENT.concat([S_WORK], S_RUBBER);
-  else if(w==='Ремонт окна') STEPS = S_CLIENT.concat([S_WORK], S_REPAIR);
+  let base;
+  if(w==='Замена резинок') base = S_CLIENT.concat([S_WORK], S_RUBBER);
+  else if(w==='Ремонт окна') base = S_CLIENT.concat([S_WORK], S_REPAIR);
   else {
     // Новое окно — всё новое, старого ничего не остаётся.
     // Подоконник всегда новый: длина → глубина → марка.
-    STEPS = S_CLIENT.concat([S_WORK], S_NEW);
-    const i = STEPS.findIndex(s=>s.k==='slope');
-    const at = i>=0 ? i : STEPS.length-1;
-    STEPS = STEPS.slice(0,at).concat(S_SILL, STEPS.slice(at));
+    base = S_CLIENT.concat([S_WORK], S_NEW);
+    const i = base.findIndex(s=>s.k==='slope');
+    const at = i>=0 ? i : base.length-1;
+    base = base.slice(0,at).concat(S_SILL, base.slice(at));
   }
+  // Марку профиля спрашиваем только для ПВХ — сразу после выбора материала
+  if(D.mat && String(D.mat).indexOf('ПВХ')===0 && !base.some(s=>s.k==='profile')){
+    const mi = base.findIndex(s=>s.k==='mat');
+    if(mi>=0) base = base.slice(0,mi+1).concat([S_PROFILE], base.slice(mi+1));
+  }
+  STEPS = base;
 }
 
 const S_NEW = [
