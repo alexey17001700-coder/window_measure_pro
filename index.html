@@ -596,7 +596,13 @@ function pick(key,val){
   const o = st.opts.find(x=>x.v===val);
   ask(st.ico, 'Подтверди выбор', st.t, val, o?o.d:'', '✓ Верно, дальше', ()=>{
     D[key]=val;
-    if(key==='workType') buildSteps();
+    if(key==='workType' || key==='mat'){
+      // Сменили вид работ или материал — пересобираем шаги и остаёмся на месте
+      if(key==='mat' && String(val).indexOf('ПВХ')!==0) D.profile='';
+      buildSteps();
+      const i = STEPS.findIndex(s=>s.k===key);
+      if(i>=0) cur = i;
+    }
     toast('Записано: '+val);
     next();
   });
