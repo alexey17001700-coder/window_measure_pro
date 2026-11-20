@@ -369,12 +369,12 @@ function buildSteps(){
   if(w==='Замена резинок') STEPS = S_CLIENT.concat([S_WORK], S_RUBBER);
   else if(w==='Ремонт окна') STEPS = S_CLIENT.concat([S_WORK], S_REPAIR);
   else {
+    // Новое окно — всё новое, старого ничего не остаётся.
+    // Подоконник всегда новый: длина → глубина → марка.
     STEPS = S_CLIENT.concat([S_WORK], S_NEW);
-    // Подоконник: если нужен новый — добавляем замер длины, глубины и марки
-    if(D.sill==='Нужен новый'){
-      const i = STEPS.findIndex(s=>s.k==='sill');
-      if(i>=0) STEPS = STEPS.slice(0,i+1).concat(S_SILL, STEPS.slice(i+1));
-    }
+    const i = STEPS.findIndex(s=>s.k==='slope');
+    const at = i>=0 ? i : STEPS.length-1;
+    STEPS = STEPS.slice(0,at).concat(S_SILL, STEPS.slice(at));
   }
 }
 
