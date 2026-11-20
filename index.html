@@ -368,7 +368,14 @@ function buildSteps(){
   const w = D.workType;
   if(w==='Замена резинок') STEPS = S_CLIENT.concat([S_WORK], S_RUBBER);
   else if(w==='Ремонт окна') STEPS = S_CLIENT.concat([S_WORK], S_REPAIR);
-  else STEPS = S_CLIENT.concat([S_WORK], S_NEW);
+  else {
+    STEPS = S_CLIENT.concat([S_WORK], S_NEW);
+    // Подоконник: если нужен новый — добавляем замер длины, глубины и марки
+    if(D.sill==='Нужен новый'){
+      const i = STEPS.findIndex(s=>s.k==='sill');
+      if(i>=0) STEPS = STEPS.slice(0,i+1).concat(S_SILL, STEPS.slice(i+1));
+    }
+  }
 }
 
 const S_NEW = [
