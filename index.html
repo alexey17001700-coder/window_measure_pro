@@ -734,6 +734,7 @@ function measureText(){
   L.push('🪟 ОКНО');
   L.push('• Тип: '+(D.winType||'—'));
   L.push('• Профиль: '+(D.mat||'—'));
+  if(D.mat && String(D.mat).indexOf('ПВХ')===0) L.push('• Марка профиля: '+(D.profile||'—'));
   L.push('• Размер: '+(D.w||'?')+' × '+(D.h||'?')+' см');
   L.push('• Створки: '+(D.sashes||'—'));
   if(D.workType==='Новое окно'){
