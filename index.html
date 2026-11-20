@@ -735,6 +735,11 @@ function measureText(){
   L.push('🔧 ДОПОЛНИТЕЛЬНО');
   if(D.workType==='Новое окно'){
     L.push('• Подоконник: '+(D.sill||'—'));
+    if(D.sill==='Нужен новый'){
+      L.push('   – Длина: '+(D.sillLen||'?')+' см');
+      L.push('   – Глубина: '+(D.sillDepth||'?')+' см');
+      L.push('   – Марка: '+(D.sillBrand||'—'));
+    }
     L.push('• Откосы: '+(D.slope||'—'));
     L.push('• Москитная сетка: '+(D.mosq||'—'));
     L.push('• Демонтаж: '+(D.demo||'—'));
