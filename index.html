@@ -631,9 +631,7 @@ function renderSummary(){
     rubRows = row('Состояние резинок',D.rubberState);
   }
 
-  const sillInfo = D.sill==='Нужен новый'
-    ? 'Нужен новый · '+(D.sillLen||'?')+'×'+(D.sillDepth||'?')+' см'+(D.sillBrand?' · '+D.sillBrand:'')
-    : D.sill;
+  const sillInfo = 'Новый · '+(D.sillLen||'?')+'×'+(D.sillDepth||'?')+' см'+(D.sillBrand?' · '+D.sillBrand:'');
 
   let extraRows = row('Этаж',D.floor?D.floor+' эт.':'—');
   if(isNew){
