@@ -567,7 +567,7 @@ function pick(key,val){
   const o = st.opts.find(x=>x.v===val);
   ask(st.ico, 'Подтверди выбор', st.t, val, o?o.d:'', '✓ Верно, дальше', ()=>{
     D[key]=val;
-    if(key==='workType'||key==='sill') buildSteps();
+    if(key==='workType') buildSteps();
     toast('Записано: '+val);
     next();
   });
