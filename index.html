@@ -768,9 +768,11 @@ function renderSummary(){
   const isRubber = D.workType==='Замена резинок';
   const isRepair = D.workType==='Ремонт окна';
 
+  const isBalc = D.winType==='Балконный блок';
   let winRows = row('Тип',D.winType)+row('Профиль',D.mat);
   if(D.mat && String(D.mat).indexOf('ПВХ')===0) winRows += row('Марка профиля',D.profile);
   winRows += row('Ширина',D.w?D.w+' см':'—')+row('Высота',D.h?D.h+' см':'—')+row('Створки',D.sashes);
+  if(isBalc) winRows += row('Дверь (Ш×В)',(D.balcDoorW||'?')+' × '+(D.balcDoorH||'?')+' мм')+row('Глухое окно (Ш×В)',(D.balcTopW||'?')+' × '+(D.balcTopH||'?')+' мм')+row('Глухарь',D.balcSide?D.balcSide+' от двери':'—');
   if(isNew) winRows += row('Открывание',D.openDir)+row('Стеклопакет',D.glazing);
   if(isRepair) winRows += row('Что ремонтируем',D.repairWhat);
 
