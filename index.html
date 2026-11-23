@@ -706,6 +706,16 @@ function validate(){
   const st = STEPS[cur];
   if(st.optional) return true;
   if(st.type==='info') return true;
+  if(st.type==='balcony'){
+    const need=[['balcDoorW','ширину двери'],['balcDoorH','высоту двери'],['balcTopW','ширину глухого окна'],['balcTopH','высоту глухого окна']];
+    for(const p of need){
+      const n=parseFloat(D[p[0]]);
+      if(!D[p[0]]||isNaN(n)||n<=0){ toast('⚠️ Укажи '+p[1]+' (мм)'); return false; }
+      if(n<200||n>4000){ toast('⚠️ Проверь '+p[1]+' — размер в мм'); return false; }
+    }
+    if(!D.balcSide){ toast('⚠️ Выбери, с какой стороны глухое окно'); return false; }
+    return true;
+  }
   const v = D[st.key];
   if(v===''||v==null){ toast('⚠️ Сначала ответь на вопрос'); return false; }
   if(st.type==='num'){
