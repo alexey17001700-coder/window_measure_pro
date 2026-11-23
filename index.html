@@ -511,6 +511,56 @@ const S_SILL = [
   ]}
 ];
 
+/* Балконный блок: дверь + глухое окно сбоку сверху — с живой схемой */
+const S_BALCONY = {k:'balcony', ico:'🚪', t:'Балконный блок', s:'Укажи размеры <b>в миллиметрах</b>. Схема ниже перестраивается сразу — сверь с проёмом.', type:'balcony'};
+
+/* ---------- СХЕМА БАЛКОННОГО БЛОКА ---------- */
+function balcSVG(){
+  const num=(v,d)=>{const n=parseFloat(v);return (isNaN(n)||n<=0)?d:n;};
+  const dW=num(D.balcDoorW,600), dH=num(D.balcDoorH,2100), tW=num(D.balcTopW,600), tH=num(D.balcTopH,500);
+  const left = D.balcSide==='Слева';
+  const totalW=dW+tW, totalH=dH;
+  const base=Math.max(totalW,totalH);
+  const pad=base*0.17, fs=base*0.036, sw=base*0.0045, tick=fs*0.55;
+  const vw=totalW+pad*2, vh=totalH+pad*2;
+  const x0=pad, y0=pad;
+  const dx=left?x0+tW:x0, tx=left?x0:x0+dW;
+  const G='#e8c37a', I='#7fd8ff', LN='rgba(232,195,122,.6)';
+  const ins=Math.min(dW,dH)*0.055, ins2=Math.min(tW,tH)*0.09;
+  const hDim=(x1,x2,y,t)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x1}" y1="${y-tick}" x2="${x1}" y2="${y+tick}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x2}" y1="${y-tick}" x2="${x2}" y2="${y+tick}" stroke="${LN}" stroke-width="${sw}"/><text x="${(x1+x2)/2}" y="${y+fs*1.3}" fill="${I}" font-size="${fs}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">${t}</text>`;
+  const vDim=(y1,y2,x,t)=>`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x-tick}" y1="${y1}" x2="${x+tick}" y2="${y1}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x-tick}" y1="${y2}" x2="${x+tick}" y2="${y2}" stroke="${LN}" stroke-width="${sw}"/><text x="${x-fs*0.5}" y="${(y1+y2)/2}" fill="${I}" font-size="${fs}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif" transform="rotate(-90 ${x-fs*0.5} ${(y1+y2)/2})">${t}</text>`;
+  const hx = left ? dx+dW-dW*0.16 : dx+dW*0.16;
+  return `<svg viewBox="0 0 ${vw} ${vh}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${dx}" y="${y0}" width="${dW}" height="${dH}" rx="${sw*2}" fill="rgba(127,216,255,.05)" stroke="${G}" stroke-width="${sw*1.7}"/>
+    <rect x="${dx+ins}" y="${y0+ins}" width="${dW-ins*2}" height="${dH-ins*2}" rx="${sw*2}" fill="rgba(127,216,255,.06)" stroke="rgba(232,195,122,.45)" stroke-width="${sw}"/>
+    <rect x="${dx+ins}" y="${y0+ins}" width="${dW-ins*2}" height="${(dH-ins*2)*0.42}" fill="rgba(127,216,255,.18)" stroke="rgba(127,216,255,.4)" stroke-width="${sw}"/>
+    <rect x="${hx}" y="${y0+dH*0.42}" width="${dW*0.055}" height="${dH*0.09}" rx="${sw*2}" fill="${G}"/>
+    <text x="${dx+dW/2}" y="${y0+dH*0.86}" fill="rgba(238,243,251,.8)" font-size="${fs*0.85}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">ДВЕРЬ</text>
+    <rect x="${tx}" y="${y0}" width="${tW}" height="${tH}" rx="${sw*2}" fill="rgba(127,216,255,.05)" stroke="${G}" stroke-width="${sw*1.7}"/>
+    <rect x="${tx+ins2}" y="${y0+ins2}" width="${tW-ins2*2}" height="${tH-ins2*2}" fill="rgba(127,216,255,.22)" stroke="rgba(127,216,255,.45)" stroke-width="${sw}"/>
+    <text x="${tx+tW/2}" y="${y0+tH/2+fs*0.35}" fill="rgba(238,243,251,.85)" font-size="${fs*0.8}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">ГЛУХОЕ</text>
+    ${hDim(x0, x0+totalW, y0-pad*0.5, 'Блок '+Math.round(totalW)+' мм')}
+    ${hDim(dx, dx+dW, y0+dH+pad*0.42, Math.round(dW)+' мм')}
+    ${hDim(tx, tx+tW, y0+tH+pad*0.42, Math.round(tW)+' мм')}
+    ${vDim(y0, y0+dH, x0-pad*0.45, Math.round(dH)+' мм')}
+    ${vDim(y0, y0+tH, x0+totalW+pad*0.45, Math.round(tH)+' мм')}
+  </svg>`;
+}
+function balcField(key,label,def){
+  return `<label class="balc-f"><span>${label}</span><input type="number" inputmode="numeric" value="${esc(D[key]||'')}" placeholder="${def}" oninput="D['${key}']=this.value;updBalc()"><i>мм</i></label>`;
+}
+function updBalc(){
+  const b=$('#balcBox'); if(b) b.innerHTML=balcSVG();
+  const t=$('#balcTot');
+  if(t){ const w=(parseFloat(D.balcDoorW)||600)+(parseFloat(D.balcTopW)||600); t.textContent=Math.round(w)+' × '+Math.round(parseFloat(D.balcDoorH)||2100)+' мм'; }
+}
+function setBalcSide(v){ D.balcSide=v; render(); }
+function balcPreset(){
+  D.balcDoorW='600'; D.balcDoorH='2100'; D.balcTopW='600'; D.balcTopH='500';
+  if(!D.balcSide) D.balcSide='Справа';
+  render(); toast('⚡ Стандартный блок подставлен');
+}
+
 let cur = 0;
 let screen = 'wizard';
 
