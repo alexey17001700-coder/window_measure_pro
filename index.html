@@ -855,6 +855,12 @@ function measureText(){
   if(D.mat && String(D.mat).indexOf('ПВХ')===0) L.push('• Марка профиля: '+(D.profile||'—'));
   L.push('• Размер: '+(D.w||'?')+' × '+(D.h||'?')+' см');
   L.push('• Створки: '+(D.sashes||'—'));
+  if(D.winType==='Балконный блок'){
+    L.push('• Балконный блок:');
+    L.push('   – Дверь: '+(D.balcDoorW||'?')+' × '+(D.balcDoorH||'?')+' мм');
+    L.push('   – Глухое окно: '+(D.balcTopW||'?')+' × '+(D.balcTopH||'?')+' мм');
+    L.push('   – Глухарь '+(D.balcSide||'—')+' от двери, выровнен по верху');
+  }
   if(D.workType==='Новое окно'){
     L.push('• Открывание: '+(D.openDir||'—'));
     L.push('• Стеклопакет: '+(D.glazing||'—'));
