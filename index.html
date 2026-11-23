@@ -689,9 +689,16 @@ function pick(key,val){
   const o = st.opts.find(x=>x.v===val);
   ask(st.ico, 'Подтверди выбор', st.t, val, o?o.d:'', '✓ Верно, дальше', ()=>{
     D[key]=val;
-    if(key==='workType' || key==='mat'){
-      // Сменили вид работ или материал — пересобираем шаги и остаёмся на месте
+    if(key==='workType' || key==='mat' || key==='winType'){
+      // Сменили вид работ, материал или тип окна — пересобираем шаги и остаёмся на месте
       if(key==='mat' && String(val).indexOf('ПВХ')!==0) D.profile='';
+      if(key==='winType' && val==='Балконный блок'){
+        if(!D.balcDoorW) D.balcDoorW='600';
+        if(!D.balcDoorH) D.balcDoorH='2100';
+        if(!D.balcTopW) D.balcTopW='600';
+        if(!D.balcTopH) D.balcTopH='500';
+        if(!D.balcSide) D.balcSide='Справа';
+      }
       buildSteps();
       const i = STEPS.findIndex(s=>s.k===key);
       if(i>=0) cur = i;
