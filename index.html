@@ -630,6 +630,23 @@ function renderStep(){
         <button onclick="stepNum(10)">+10</button>
       </div>
       ${st.hint?`<div class="hint">⚠️ ${st.hint}</div>`:''}`;
+  } else if(st.type==='balcony'){
+    const totW=(parseFloat(D.balcDoorW)||600)+(parseFloat(D.balcTopW)||600);
+    const totH=Math.round(parseFloat(D.balcDoorH)||2100);
+    body = `
+      <div class="balc-box" id="balcBox">${balcSVG()}</div>
+      <div class="balc-grid">
+        ${balcField('balcDoorW','Ширина двери',600)}
+        ${balcField('balcDoorH','Высота двери',2100)}
+        ${balcField('balcTopW','Ширина глухого окна',600)}
+        ${balcField('balcTopH','Высота глухого окна',500)}
+      </div>
+      <div class="opts" style="margin-top:12px">
+        <button class="opt ${D.balcSide==='Справа'?'sel':''}" onclick="setBalcSide('Справа')"><span class="oi">➡️</span><span class="ot">Глухое окно справа<small>Дверь слева, глухарь прилегает справа сверху</small></span><span class="chk">✓</span></button>
+        <button class="opt ${D.balcSide==='Слева'?'sel':''}" onclick="setBalcSide('Слева')"><span class="oi">⬅️</span><span class="ot">Глухое окно слева<small>Дверь справа, глухарь прилегает слева сверху</small></span><span class="chk">✓</span></button>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="balcPreset()">⚡ Стандарт: дверь 2100×600 + глухарь 500×600</button>
+      <div class="hint">⚠️ Размеры в <b>миллиметрах</b>. Общий габарит блока: <b id="balcTot">${Math.round(totW)} × ${totH} мм</b>. Глухое окно выровнено по верху двери и прилегает к ней сбоку.</div>`;
   } else if(st.type==='info'){
     body = `<div class="sum">` + st.items.map(i=>`<div class="sum-i"><b style="text-align:left;font-weight:600;font-size:13.5px">${i}</b></div>`).join('') + `</div>`;
   } else {
