@@ -1,5 +1,5 @@
-const CACHE = 'wmpro-v7';
-const ASSETS = ['./', './index.html', './balcony.js', './manifest.json', './icons/icon.svg'];
+const CACHE = 'wmpro-v8';
+const ASSETS = ['./', './index.html', './manifest.json', './icons/icon.svg'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
