@@ -1,259 +1,257 @@
 /* ============================================================
-   ЗАМЕР PRO · Балконный блок — визуализация
-   Дверь + глухая часть. Глухая прилегает к двери СБОКУ,
-   по ВЕРХНЕМУ краю (по умолчанию). Все размеры в сантиметрах.
-   Открыть: кнопка 🚪 в приложении или адрес с #balcony
+   БАЛКОННЫЙ БЛОК — визуализация (модуль для «Замер PRO»)
+   Дверь + глухое окно, прилегающее к ней сбоку сверху.
+   Все размеры — в МИЛЛИМЕТРАХ.
+   Открывается кнопкой 🚪 (слева внизу) или openBalcony().
    ============================================================ */
 (function(){
 'use strict';
 
-var KEY='wm_balcony';
-var DEF={doorW:60,doorH:210,panW:60,panH:50,side:'right',place:'top'};
-var BK=Object.assign({},DEF);
-try{ var sv=JSON.parse(localStorage.getItem(KEY)||'null'); if(sv&&typeof sv==='object') BK=Object.assign(BK,sv); }catch(e){}
+/* ---------- СТИЛИ ---------- */
+const CSS = `
+.blc-ovl{position:fixed;inset:0;z-index:95;background:rgba(4,7,13,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.blc-ovl.on{display:flex;animation:blcFade .2s}
+@keyframes blcFade{from{opacity:0}to{opacity:1}}
+.blc{width:100%;max-width:440px;background:linear-gradient(180deg,#141c2c,#0d1320);border:1px solid rgba(232,195,122,.3);border-radius:24px;padding:18px;box-shadow:0 26px 70px rgba(0,0,0,.7);animation:blcPop .3s cubic-bezier(.2,.9,.3,1.2);margin:auto}
+@keyframes blcPop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.blc-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.blc-h .i{font-size:26px}
+.blc-h h3{margin:0;font-size:18px;font-weight:800;flex:1;color:#eef3fb}
+.blc-x{background:none;border:none;color:#8b98ad;font-size:22px;cursor:pointer;padding:0 4px}
+.blc-box{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:8px;margin-bottom:12px}
+.blc-box svg{display:block;width:100%;height:auto;max-height:320px}
+.blc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.blc-f{display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.075);border:1.5px solid rgba(255,255,255,.10);border-radius:14px;padding:10px 12px;transition:.2s}
+.blc-f span{font-size:11.5px;color:#8b98ad;font-weight:700}
+.blc-f input{background:transparent;border:none;outline:none;color:#bff0ff;font-family:inherit;font-size:22px;font-weight:800;width:100%;padding:0;min-width:0}
+.blc-f input::-webkit-outer-spin-button,.blc-f input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.blc-f input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.blc-f i{font-size:11px;color:#8b98ad;font-style:normal;font-weight:700}
+.blc-f:focus-within{border-color:#e8c37a;box-shadow:0 0 18px rgba(232,195,122,.18)}
+.blc-side{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.blc-side button{padding:12px;border-radius:14px;border:1.5px solid rgba(255,255,255,.10);background:rgba(255,255,255,.075);color:#eef3fb;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.2s}
+.blc-side button.sel{border-color:#e8c37a;background:linear-gradient(135deg,rgba(232,195,122,.16),rgba(127,216,255,.07));box-shadow:0 0 22px rgba(232,195,122,.18)}
+.blc-info{margin-top:12px;font-size:12px;color:#8b98ad;background:rgba(127,216,255,.07);border:1px solid rgba(127,216,255,.22);padding:10px 12px;border-radius:12px;line-height:1.65}
+.blc-info b{color:#bff0ff}
+.blc-btns{display:grid;gap:10px;margin-top:14px}
+.blc-btn{width:100%;padding:15px;border-radius:16px;border:none;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:.2s}
+.blc-btn:active{transform:scale(.975)}
+.blc-gold{background:linear-gradient(135deg,#e8c37a,#f6e3b4);color:#1a1206;box-shadow:0 10px 28px rgba(232,195,122,.3)}
+.blc-ghost{background:rgba(255,255,255,.075);border:1.5px solid rgba(255,255,255,.10);color:#eef3fb}
+.blc-row{display:flex;gap:10px}
+.blc-row .blc-btn{flex:1}
+@media(max-width:380px){.blc-grid{grid-template-columns:1fr}}
+`;
 
-var LIM={doorW:[40,200],doorH:[120,300],panW:[20,400],panH:[20,200]};
+function injectCSS(){
+  if(document.getElementById('blc-css')) return;
+  const s = document.createElement('style');
+  s.id = 'blc-css';
+  s.textContent = CSS;
+  document.head.appendChild(s);
+}
 
-function toNum(v,d){ var n=parseFloat(String(v).replace(',','.')); return isNaN(n)?d:n; }
-function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
-function R(n){ return Math.round(n*10)/10; }
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(BK)); }catch(e){} }
-function say(m){ if(typeof window.toast==='function'){ window.toast(m); } }
+/* ---------- СОСТОЯНИЕ ---------- */
+const S = { doorW:'600', doorH:'2100', topW:'600', topH:'500', side:'Справа' };
 
-/* ---------------- ГЕОМЕТРИЯ ---------------- */
-function layout(){
-  var isAbove = BK.place==='above';
-  var totalW = isAbove ? Math.max(BK.doorW,BK.panW) : BK.doorW+BK.panW;
-  var totalH = isAbove ? BK.doorH+BK.panH : Math.max(BK.doorH,BK.panH);
-  var PADL=46, PADR=30, PADT=34, PADB=54;
-  var k = Math.min(300/totalW, 270/totalH);
-  var x0=PADL, y0=PADT;
-  var W = PADL + totalW*k + PADR;
-  var H = PADT + totalH*k + PADB;
-  var dX,dY,pX,pY;
-  if(isAbove){
-    dX = x0; dY = y0 + BK.panH*k;
-    pX = x0; pY = y0;
-  } else if(BK.side==='right'){
-    dX = x0; pX = x0 + BK.doorW*k;
-    dY = y0; pY = (BK.place==='top') ? y0 : y0 + (totalH-BK.panH)*k;
-  } else {
-    pX = x0; dX = x0 + BK.panW*k;
-    dY = y0; pY = (BK.place==='top') ? y0 : y0 + (totalH-BK.panH)*k;
+function load(){
+  try{
+    const raw = localStorage.getItem('wm_balc');
+    if(raw) Object.assign(S, JSON.parse(raw));
+  }catch(e){}
+  // Если в основном замере уже есть размеры блока — берём их
+  const D = window.D;
+  if(D){
+    if(D.balcDoorW) S.doorW = String(D.balcDoorW);
+    if(D.balcDoorH) S.doorH = String(D.balcDoorH);
+    if(D.balcTopW)  S.topW  = String(D.balcTopW);
+    if(D.balcTopH)  S.topH  = String(D.balcTopH);
+    if(D.balcSide)  S.side  = D.balcSide;
   }
-  return {isAbove:isAbove,totalW:totalW,totalH:totalH,k:k,x0:x0,y0:y0,W:W,H:H,
-          dX:dX,dY:dY,dW:BK.doorW*k,dH:BK.doorH*k,
-          pX:pX,pY:pY,pW:BK.panW*k,pH:BK.panH*k};
 }
+function save(){ try{ localStorage.setItem('wm_balc', JSON.stringify(S)); }catch(e){} }
 
-/* ---------------- ПРИМИТИВЫ ---------------- */
-function glass(x,y,w,h){
-  return '<rect x="'+R(x)+'" y="'+R(y)+'" width="'+R(w)+'" height="'+R(h)+'" rx="2" fill="rgba(127,216,255,.14)" stroke="rgba(191,240,255,.42)" stroke-width="1"/>';
-}
-function hDim(x1,x2,y,val,sub){
-  var cx=(x1+x2)/2, label=(sub?sub+' ':'')+val+' см';
-  return '<line x1="'+R(x1)+'" y1="'+R(y)+'" x2="'+R(x2)+'" y2="'+R(y)+'" stroke="#e8c37a" stroke-width="1.1" opacity=".75"/>'+
-    '<line x1="'+R(x1)+'" y1="'+R(y-5)+'" x2="'+R(x1)+'" y2="'+R(y+5)+'" stroke="#e8c37a" stroke-width="1.1"/>'+
-    '<line x1="'+R(x2)+'" y1="'+R(y-5)+'" x2="'+R(x2)+'" y2="'+R(y+5)+'" stroke="#e8c37a" stroke-width="1.1"/>'+
-    '<text x="'+R(cx)+'" y="'+R(y-6)+'" fill="#f6e3b4" font-size="10.5" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">'+label+'</text>';
-}
-function vDim(x,y1,y2,label,left){
-  var ty=(y1+y2)/2+4, tx=left?x-6:x+6, anchor=left?'end':'start';
-  return '<line x1="'+R(x)+'" y1="'+R(y1)+'" x2="'+R(x)+'" y2="'+R(y2)+'" stroke="#e8c37a" stroke-width="1.1" opacity=".75"/>'+
-    '<line x1="'+R(x-4)+'" y1="'+R(y1)+'" x2="'+R(x+4)+'" y2="'+R(y1)+'" stroke="#e8c37a" stroke-width="1.1"/>'+
-    '<line x1="'+R(x-4)+'" y1="'+R(y2)+'" x2="'+R(x+4)+'" y2="'+R(y2)+'" stroke="#e8c37a" stroke-width="1.1"/>'+
-    '<text x="'+R(tx)+'" y="'+R(ty)+'" fill="#f6e3b4" font-size="10.5" font-weight="700" text-anchor="'+anchor+'" font-family="Manrope,sans-serif">'+label+'</text>';
-}
+const num = (v,d)=>{ const n=parseFloat(v); return (isNaN(n)||n<=0) ? d : n; };
+const mm  = v => Math.round(num(v,0));
 
-/* ---------------- РИСУНОК ---------------- */
+/* ---------- СХЕМА (SVG) ---------- */
 function svg(){
-  var L=layout(), p='';
+  const dW=num(S.doorW,600), dH=num(S.doorH,2100), tW=num(S.topW,600), tH=num(S.topH,500);
+  const left = S.side==='Слева';
+  const totalW=dW+tW, totalH=dH;
+  const base=Math.max(totalW,totalH);
+  const pad=base*0.17, fs=base*0.036, sw=base*0.0045, tick=fs*0.55;
+  const vw=totalW+pad*2, vh=totalH+pad*2;
+  const x0=pad, y0=pad;
+  const dx=left?x0+tW:x0, tx=left?x0:x0+dW;
+  const G='#e8c37a', I='#7fd8ff', LN='rgba(232,195,122,.6)';
+  const ins=Math.min(dW,dH)*0.055, ins2=Math.min(tW,tH)*0.09;
+  const hDim=(x1,x2,y,t)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x1}" y1="${y-tick}" x2="${x1}" y2="${y+tick}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x2}" y1="${y-tick}" x2="${x2}" y2="${y+tick}" stroke="${LN}" stroke-width="${sw}"/><text x="${(x1+x2)/2}" y="${y+fs*1.3}" fill="${I}" font-size="${fs}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">${t}</text>`;
+  const vDim=(y1,y2,x,t)=>`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x-tick}" y1="${y1}" x2="${x+tick}" y2="${y1}" stroke="${LN}" stroke-width="${sw}"/><line x1="${x-tick}" y1="${y2}" x2="${x+tick}" y2="${y2}" stroke="${LN}" stroke-width="${sw}"/><text x="${x-fs*0.5}" y="${(y1+y2)/2}" fill="${I}" font-size="${fs}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif" transform="rotate(-90 ${x-fs*0.5} ${(y1+y2)/2})">${t}</text>`;
+  const hx = left ? dx+dW-dW*0.16 : dx+dW*0.16;
+  return `<svg viewBox="0 0 ${vw} ${vh}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${dx}" y="${y0}" width="${dW}" height="${dH}" rx="${sw*2}" fill="rgba(127,216,255,.05)" stroke="${G}" stroke-width="${sw*1.7}"/>
+    <rect x="${dx+ins}" y="${y0+ins}" width="${dW-ins*2}" height="${dH-ins*2}" rx="${sw*2}" fill="rgba(127,216,255,.06)" stroke="rgba(232,195,122,.45)" stroke-width="${sw}"/>
+    <rect x="${dx+ins}" y="${y0+ins}" width="${dW-ins*2}" height="${(dH-ins*2)*0.42}" fill="rgba(127,216,255,.18)" stroke="rgba(127,216,255,.4)" stroke-width="${sw}"/>
+    <rect x="${hx}" y="${y0+dH*0.42}" width="${dW*0.055}" height="${dH*0.09}" rx="${sw*2}" fill="${G}"/>
+    <text x="${dx+dW/2}" y="${y0+dH*0.86}" fill="rgba(238,243,251,.8)" font-size="${fs*0.85}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">ДВЕРЬ</text>
+    <rect x="${tx}" y="${y0}" width="${tW}" height="${tH}" rx="${sw*2}" fill="rgba(127,216,255,.05)" stroke="${G}" stroke-width="${sw*1.7}"/>
+    <rect x="${tx+ins2}" y="${y0+ins2}" width="${tW-ins2*2}" height="${tH-ins2*2}" fill="rgba(127,216,255,.22)" stroke="rgba(127,216,255,.45)" stroke-width="${sw}"/>
+    <text x="${tx+tW/2}" y="${y0+tH/2+fs*0.35}" fill="rgba(238,243,251,.85)" font-size="${fs*0.8}" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">ГЛУХОЕ</text>
+    ${hDim(x0, x0+totalW, y0-pad*0.5, 'Блок '+Math.round(totalW)+' мм')}
+    ${hDim(dx, dx+dW, y0+dH+pad*0.42, Math.round(dW)+' мм')}
+    ${hDim(tx, tx+tW, y0+tH+pad*0.42, Math.round(tW)+' мм')}
+    ${vDim(y0, y0+dH, x0-pad*0.45, Math.round(dH)+' мм')}
+    ${vDim(y0, y0+tH, x0+totalW+pad*0.45, Math.round(tH)+' мм')}
+  </svg>`;
+}
 
-  /* стена — пустое место под глухой частью, если она короче двери */
-  if(!L.isAbove && BK.panH < L.totalH){
-    var emptyH=(L.totalH-BK.panH)*L.k;
-    var ey = BK.place==='top' ? L.y0+BK.panH*L.k : L.y0;
-    p += '<rect x="'+R(L.pX)+'" y="'+R(ey)+'" width="'+R(L.pW)+'" height="'+R(emptyH)+'" fill="url(#bkWall)" stroke="rgba(255,255,255,.14)" stroke-dasharray="4 3"/>';
-    p += '<text x="'+R(L.pX+L.pW/2)+'" y="'+R(ey+emptyH/2+4)+'" fill="#8b98ad" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Manrope,sans-serif">стена</text>';
+/* ---------- РАСЧЁТЫ ---------- */
+function calc(){
+  const dW=num(S.doorW,600), dH=num(S.doorH,2100), tW=num(S.topW,600), tH=num(S.topH,500);
+  const area = (dW+tW)*dH/1e6;                       // м² блока
+  const glass = ((dW-120)*(dH*0.42) + (tW-120)*(tH-120))/1e6; // м² остекления (примерно)
+  const seam  = (2*(dH+dW) + 2*(tH+tW))/1000;        // м уплотнителя по контурам
+  return { area, glass, seam, totalW:dW+tW, totalH:dH };
+}
+
+/* ---------- ОКНО ---------- */
+function field(key,label,def){
+  return `<label class="blc-f"><span>${label}</span>
+    <input type="number" inputmode="numeric" value="${S[key]||''}" placeholder="${def}" oninput="__blc.set('${key}',this.value)">
+    <i>мм</i></label>`;
+}
+function body(){
+  const c = calc();
+  return `
+    <div class="blc-box" id="blcBox">${svg()}</div>
+    <div class="blc-grid">
+      ${field('doorW','Ширина двери',600)}
+      ${field('doorH','Высота двери',2100)}
+      ${field('topW','Ширина глухого окна',600)}
+      ${field('topH','Высота глухого окна',500)}
+    </div>
+    <div class="blc-side">
+      <button class="${S.side==='Справа'?'sel':''}" onclick="__blc.side('Справа')">➡️ Глухое справа</button>
+      <button class="${S.side==='Слева'?'sel':''}" onclick="__blc.side('Слева')">⬅️ Глухое слева</button>
+    </div>
+    <div class="blc-info" id="blcInfo">
+      Общий габарит: <b>${Math.round(c.totalW)} × ${Math.round(c.totalH)} мм</b><br>
+      Площадь блока: <b>${c.area.toFixed(2)} м²</b> · остекление ≈ <b>${c.glass.toFixed(2)} м²</b><br>
+      Уплотнитель по контурам: <b>${c.seam.toFixed(2)} м</b>
+    </div>
+    <div class="blc-btns">
+      <button class="blc-btn blc-gold" onclick="__blc.apply()">✓ Записать в замер</button>
+      <div class="blc-row">
+        <button class="blc-btn blc-ghost" onclick="__blc.preset()">⚡ Стандарт</button>
+        <button class="blc-btn blc-ghost" onclick="__blc.share()">📤 Отправить</button>
+      </div>
+      <button class="blc-btn blc-ghost" onclick="__blc.close()">Закрыть</button>
+    </div>`;
+}
+
+function open(){
+  injectCSS();
+  load();
+  let ovl = document.getElementById('blcOvl');
+  if(!ovl){
+    ovl = document.createElement('div');
+    ovl.id = 'blcOvl';
+    ovl.className = 'blc-ovl';
+    ovl.innerHTML = `<div class="blc">
+      <div class="blc-h"><span class="i">🚪</span><h3>Балконный блок</h3><button class="blc-x" onclick="__blc.close()">✕</button></div>
+      <div id="blcBody"></div>
+    </div>`;
+    ovl.addEventListener('click', e=>{ if(e.target===ovl) close(); });
+    document.body.appendChild(ovl);
   }
-
-  /* дверь */
-  p += '<rect x="'+R(L.dX)+'" y="'+R(L.dY)+'" width="'+R(L.dW)+'" height="'+R(L.dH)+'" rx="3" fill="rgba(255,255,255,.05)" stroke="#e8c37a" stroke-width="1.8"/>';
-  p += glass(L.dX+L.dW*0.13, L.dY+L.dH*0.05, L.dW*0.74, L.dH*0.47);
-  p += glass(L.dX+L.dW*0.13, L.dY+L.dH*0.60, L.dW*0.74, L.dH*0.34);
-  p += '<circle cx="'+R(L.dX+L.dW*0.5)+'" cy="'+R(L.dY+L.dH*0.565)+'" r="'+R(Math.max(2,L.dW*0.07))+'" fill="none" stroke="#e8c37a" stroke-width="1.4"/>';
-  if(L.dH>60 && L.dW>30){
-    p += '<text x="'+R(L.dX+L.dW/2)+'" y="'+R(L.dY+L.dH*0.30)+'" fill="#f6e3b4" font-size="10" font-weight="800" text-anchor="middle" font-family="Manrope,sans-serif">дверь</text>';
+  document.getElementById('blcBody').innerHTML = body();
+  ovl.classList.add('on');
+  document.documentElement.style.overflow = 'hidden';
+}
+function close(){
+  const ovl = document.getElementById('blcOvl');
+  if(ovl) ovl.classList.remove('on');
+  document.documentElement.style.overflow = '';
+}
+function redraw(){
+  const b = document.getElementById('blcBox');
+  if(b) b.innerHTML = svg();
+  const c = calc();
+  const i = document.getElementById('blcInfo');
+  if(i) i.innerHTML = `Общий габарит: <b>${Math.round(c.totalW)} × ${Math.round(c.totalH)} мм</b><br>
+      Площадь блока: <b>${c.area.toFixed(2)} м²</b> · остекление ≈ <b>${c.glass.toFixed(2)} м²</b><br>
+      Уплотнитель по контурам: <b>${c.seam.toFixed(2)} м</b>`;
+}
+function set(key,val){ S[key]=val; save(); redraw(); }
+function side(v){
+  S.side=v; save();
+  document.querySelectorAll('.blc-side button').forEach((b,idx)=>{
+    b.classList.toggle('sel', (idx===0 && v==='Справа') || (idx===1 && v==='Слева'));
+  });
+  redraw();
+}
+function preset(){
+  S.doorW='600'; S.doorH='2100'; S.topW='600'; S.topH='500';
+  if(!S.side) S.side='Справа';
+  save();
+  document.getElementById('blcBody').innerHTML = body();
+  toast('⚡ Стандарт: дверь 2100×600 + глухарь 500×600');
+}
+function apply(){
+  const D = window.D;
+  if(D){
+    D.balcDoorW = String(mm(S.doorW)||600);
+    D.balcDoorH = String(mm(S.doorH)||2100);
+    D.balcTopW  = String(mm(S.topW)||600);
+    D.balcTopH  = String(mm(S.topH)||500);
+    D.balcSide  = S.side;
+    if(typeof window.buildSteps === 'function') window.buildSteps();
+    if(typeof window.render === 'function') window.render();
   }
-
-  /* глухая часть */
-  p += '<rect x="'+R(L.pX)+'" y="'+R(L.pY)+'" width="'+R(L.pW)+'" height="'+R(L.pH)+'" rx="3" fill="rgba(255,255,255,.05)" stroke="#7fd8ff" stroke-width="1.6"/>';
-  p += glass(L.pX+L.pW*0.11, L.pY+L.pH*0.13, L.pW*0.78, L.pH*0.74);
-  if(L.pH>34 && L.pW>44){
-    p += '<text x="'+R(L.pX+L.pW/2)+'" y="'+R(L.pY+L.pH*0.52)+'" fill="#bff0ff" font-size="10" font-weight="800" text-anchor="middle" font-family="Manrope,sans-serif">глухое</text>';
+  save();
+  toast('✅ Размеры блока записаны в замер');
+  close();
+}
+function text(){
+  const c = calc();
+  return [
+    '🚪 БАЛКОННЫЙ БЛОК (размеры в мм)',
+    '━━━━━━━━━━━━━━━━━━',
+    '• Дверь: '+Math.round(num(S.doorW,600))+' × '+Math.round(num(S.doorH,2100))+' мм',
+    '• Глухое окно: '+Math.round(num(S.topW,600))+' × '+Math.round(num(S.topH,500))+' мм',
+    '• Глухарь: '+S.side+' от двери, выровнен по верху',
+    '',
+    'Общий габарит: '+Math.round(c.totalW)+' × '+Math.round(c.totalH)+' мм',
+    'Площадь блока: '+c.area.toFixed(2)+' м²',
+    'Остекление ≈ '+c.glass.toFixed(2)+' м²',
+    'Уплотнитель по контурам: '+c.seam.toFixed(2)+' м'
+  ].join('\n');
+}
+function share(){
+  const t = text();
+  if(navigator.share){ navigator.share({title:'Балконный блок', text:t}).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(t).then(()=>toast('📋 Скопировано')).catch(()=>toast('Не удалось скопировать')); }
+  else toast('Отправка недоступна');
+}
+function toast(m){
+  if(typeof window.toast === 'function'){ window.toast(m); return; }
+  let t = document.getElementById('blcToast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'blcToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:26px;transform:translate(-50%,120px);z-index:99;background:linear-gradient(135deg,#1b2436,#0d1320);border:1px solid rgba(232,195,122,.4);color:#eef3fb;padding:13px 20px;border-radius:16px;font:600 13.5px Manrope,system-ui,sans-serif;box-shadow:0 14px 40px rgba(0,0,0,.6);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);max-width:88vw;text-align:center';
+    document.body.appendChild(t);
   }
-
-  /* размеры: ширина */
-  var yb = L.y0 + L.totalH*L.k + 20;
-  if(L.isAbove){
-    p += hDim(L.dX, L.dX+L.dW, yb, BK.doorW, 'дверь');
-    p += hDim(L.pX, L.pX+L.pW, yb+20, BK.panW, 'глухая');
-  } else {
-    p += hDim(L.dX, L.dX+L.dW, yb, BK.doorW);
-    p += hDim(L.pX, L.pX+L.pW, yb, BK.panW);
-  }
-
-  /* размеры: высота */
-  var doorLeft = L.isAbove || L.dX < L.pX;
-  p += vDim(doorLeft ? L.dX-10 : L.dX+L.dW+10, L.dY, L.dY+L.dH, BK.doorH+' см', doorLeft);
-  var panLeft = L.isAbove || L.pX < L.dX;
-  p += vDim(panLeft ? L.pX-10 : L.pX+L.pW+10, L.pY, L.pY+L.pH, BK.panH+' см', panLeft);
-
-  return '<svg viewBox="0 0 '+R(L.W)+' '+R(L.H)+'" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">'+
-    '<defs><pattern id="bkWall" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">'+
-    '<line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.10)" stroke-width="2"/></pattern></defs>'+
-    p+'</svg>';
+  t.textContent = m;
+  t.style.transform = 'translate(-50%,0)';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{ t.style.transform = 'translate(-50%,120px)'; }, 2400);
 }
 
-function chips(){
-  var L=layout();
-  var area=(BK.doorW*BK.doorH + BK.panW*BK.panH)/10000;
-  var per=(2*(BK.doorW+BK.doorH) + 2*(BK.panW+BK.panH))/100;
-  var sideTxt = L.isAbove ? 'над дверью' : (BK.side==='right' ? 'дверь слева' : 'дверь справа');
-  var placeTxt = L.isAbove ? 'сверху' : (BK.place==='top' ? 'сбоку сверху' : 'сбоку снизу');
-  return '<div class="bk-chip"><b>'+BK.doorW+'×'+BK.doorH+'</b><span>дверь, см</span></div>'+
-    '<div class="bk-chip"><b>'+BK.panW+'×'+BK.panH+'</b><span>глухая, см</span></div>'+
-    '<div class="bk-chip"><b>'+L.totalW+'×'+L.totalH+'</b><span>габарит блока</span></div>'+
-    '<div class="bk-chip"><b>'+area.toFixed(2)+' м²</b><span>площадь</span></div>'+
-    '<div class="bk-chip"><b>'+per.toFixed(1)+' м</b><span>уплотнитель</span></div>'+
-    '<div class="bk-chip"><b>'+sideTxt+'</b><span>'+placeTxt+'</span></div>';
-}
+/* ---------- ЭКСПОРТ ---------- */
+window.__blc = { set, side, preset, apply, share, close, open };
+window.openBalcony = open;
 
-/* ---------------- РЕНДЕР ---------------- */
-function draw(){
-  var s=document.getElementById('bkSvg'); if(!s) return;
-  s.innerHTML=svg();
-  var c=document.getElementById('bkChips'); if(c) c.innerHTML=chips();
-}
-function syncInputs(){
-  var m={bkDoorW:'doorW',bkDoorH:'doorH',bkPanW:'panW',bkPanH:'panH'};
-  Object.keys(m).forEach(function(id){ var el=document.getElementById(id); if(el) el.value=BK[m[id]]; });
-}
-function syncCtl(){
-  document.querySelectorAll('#bkPlace button').forEach(function(b){ b.classList.toggle('on', b.dataset.v===BK.place); });
-  document.querySelectorAll('#bkSide button').forEach(function(b){ b.classList.toggle('on', b.dataset.v===BK.side); });
-  var w=document.getElementById('bkSideWrap'); if(w) w.style.display = BK.place==='above' ? 'none' : 'block';
-}
-
-/* ---------------- СБОРКА ОКНА ---------------- */
-var CSS=''+
-'#bkOvl{position:fixed;inset:0;z-index:95;background:rgba(4,7,13,.93);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 34px}'+
-'#bkOvl.on{display:block}'+
-'.bk-card{max-width:520px;margin:0 auto;background:linear-gradient(180deg,#141c2c,#0d1320);border:1px solid rgba(232,195,122,.3);border-radius:24px;padding:16px;box-shadow:0 26px 70px rgba(0,0,0,.7)}'+
-'.bk-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}'+
-'.bk-h1{font-size:17px;font-weight:800;color:#f6e3b4}'+
-'.bk-x{margin-left:auto;width:36px;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#eef3fb;font-size:15px;cursor:pointer}'+
-'.bk-sub{font-size:11.5px;line-height:1.5;color:#8b98ad;margin-bottom:12px}'+
-'.bk-svg{background:radial-gradient(120% 120% at 50% 0%,rgba(127,216,255,.07),transparent 70%);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:8px;margin-bottom:12px}'+
-'.bk-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}'+
-'.bk-chip{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 5px;text-align:center}'+
-'.bk-chip b{display:block;font-size:12.5px;color:#bff0ff;font-weight:800}'+
-'.bk-chip span{display:block;font-size:9.5px;color:#8b98ad;margin-top:2px}'+
-'.bk-label{font-size:10.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#e8c37a;margin:12px 0 7px;opacity:.9}'+
-'.bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}'+
-'.bk-f{display:flex;flex-direction:column;gap:5px}'+
-'.bk-f label{font-size:10.5px;color:#8b98ad;font-weight:700}'+
-'.bk-f input{width:100%;background:rgba(0,0,0,.35);border:1.5px solid rgba(255,255,255,.1);border-radius:13px;padding:12px 8px;font-size:18px;font-weight:800;color:#bff0ff;text-align:center;font-family:inherit;outline:none;-webkit-appearance:none}'+
-'.bk-f input:focus{border-color:#e8c37a;box-shadow:0 0 18px rgba(232,195,122,.2)}'+
-'.bk-seg{display:flex;gap:7px;flex-wrap:wrap}'+
-'.bk-seg button{flex:1;min-width:96px;padding:11px 6px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.055);color:#eef3fb;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:.15s}'+
-'.bk-seg button:active{transform:scale(.97)}'+
-'.bk-seg button.on{border-color:#e8c37a;background:linear-gradient(135deg,rgba(232,195,122,.18),rgba(127,216,255,.08));color:#f6e3b4}'+
-'.bk-row{display:flex;gap:8px;margin-top:14px}'+
-'.bk-btn{flex:1;padding:15px;border-radius:15px;border:none;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}'+
-'.bk-btn:active{transform:scale(.97)}'+
-'.bk-gold{background:linear-gradient(135deg,#e8c37a,#f6e3b4);color:#1a1206;box-shadow:0 10px 26px rgba(232,195,122,.25)}'+
-'.bk-ghost{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);color:#eef3fb}'+
-'@media(max-width:360px){.bk-chips{grid-template-columns:1fr 1fr}}';
-
-function build(){
-  if(document.getElementById('bkOvl')) return;
-  var st=document.createElement('style'); st.id='bkCss'; st.textContent=CSS; document.head.appendChild(st);
-  var ov=document.createElement('div'); ov.id='bkOvl';
-  ov.innerHTML=''+
-  '<div class="bk-card">'+
-    '<div class="bk-top"><div class="bk-h1">🚪 Балконный блок</div><button class="bk-x" onclick="closeBalcony()">✕</button></div>'+
-    '<div class="bk-sub">Дверь + глухая часть. Глухая прилегает к двери сбоку, по верхнему краю. Меняй размеры — блок перерисуется сразу.</div>'+
-    '<div class="bk-svg" id="bkSvg"></div>'+
-    '<div class="bk-chips" id="bkChips"></div>'+
-    '<div class="bk-label">Размеры, см</div>'+
-    '<div class="bk-grid">'+
-      '<div class="bk-f"><label>Ширина двери</label><input id="bkDoorW" type="number" inputmode="decimal" oninput="bkSet(\'doorW\',this.value)" onchange="bkFix(\'doorW\',this)"></div>'+
-      '<div class="bk-f"><label>Высота двери</label><input id="bkDoorH" type="number" inputmode="decimal" oninput="bkSet(\'doorH\',this.value)" onchange="bkFix(\'doorH\',this)"></div>'+
-      '<div class="bk-f"><label>Ширина глухой</label><input id="bkPanW" type="number" inputmode="decimal" oninput="bkSet(\'panW\',this.value)" onchange="bkFix(\'panW\',this)"></div>'+
-      '<div class="bk-f"><label>Высота глухой</label><input id="bkPanH" type="number" inputmode="decimal" oninput="bkSet(\'panH\',this.value)" onchange="bkFix(\'panH\',this)"></div>'+
-    '</div>'+
-    '<div class="bk-label">Положение глухой части</div>'+
-    '<div class="bk-seg" id="bkPlace">'+
-      '<button data-v="top" onclick="bkPlace(\'top\')">Сбоку сверху</button>'+
-      '<button data-v="bottom" onclick="bkPlace(\'bottom\')">Сбоку снизу</button>'+
-      '<button data-v="above" onclick="bkPlace(\'above\')">Сверху над дверью</button>'+
-    '</div>'+
-    '<div id="bkSideWrap">'+
-      '<div class="bk-label">С какой стороны дверь</div>'+
-      '<div class="bk-seg" id="bkSide">'+
-        '<button data-v="left" onclick="bkSide(\'left\')">Глухая слева</button>'+
-        '<button data-v="right" onclick="bkSide(\'right\')">Глухая справа</button>'+
-      '</div>'+
-    '</div>'+
-    '<div class="bk-row"><button class="bk-btn bk-gold" onclick="bkSend()">📤 Отправить</button><button class="bk-btn bk-ghost" onclick="bkReset()">↺ Сброс</button></div>'+
-    '<div class="bk-row"><button class="bk-btn bk-ghost" onclick="closeBalcony()">Готово</button></div>'+
-  '</div>';
-  document.body.appendChild(ov);
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') window.closeBalcony(); });
-}
-
-/* ---------------- ПУБЛИЧНЫЕ ДЕЙСТВИЯ ---------------- */
-window.openBalcony=function(){
-  build();
-  document.getElementById('bkOvl').classList.add('on');
-  document.body.style.overflow='hidden';
-  syncInputs(); syncCtl(); draw();
-};
-window.closeBalcony=function(){
-  var ov=document.getElementById('bkOvl'); if(ov) ov.classList.remove('on');
-  document.body.style.overflow='';
-};
-window.bkSet=function(key,val){
-  var n=toNum(val,BK[key]);
-  BK[key]=clamp(n,1,600);
-  save(); draw();
-};
-window.bkFix=function(key,el){
-  var n=clamp(toNum(el.value,BK[key]),LIM[key][0],LIM[key][1]);
-  BK[key]=Math.round(n); el.value=BK[key]; save(); draw();
-};
-window.bkPlace=function(v){ BK.place=v; save(); syncCtl(); draw(); };
-window.bkSide=function(v){ BK.side=v; save(); syncCtl(); draw(); };
-window.bkReset=function(){ BK=Object.assign({},DEF); save(); syncInputs(); syncCtl(); draw(); say('↺ Размеры сброшены'); };
-window.bkSend=function(){
-  var L=layout();
-  var area=(BK.doorW*BK.doorH + BK.panW*BK.panH)/10000;
-  var per=(2*(BK.doorW+BK.doorH) + 2*(BK.panW+BK.panH))/100;
-  var placeTxt = L.isAbove ? 'сверху над дверью' : ('сбоку ' + (BK.place==='top'?'по верхнему краю':'по нижнему краю') + (BK.side==='right'?', справа от двери':', слева от двери'));
-  var txt='🚪 БАЛКОННЫЙ БЛОК\n'+
-    '• Дверь: '+BK.doorW+' × '+BK.doorH+' см\n'+
-    '• Глухая часть: '+BK.panW+' × '+BK.panH+' см ('+placeTxt+')\n'+
-    '• Габарит блока: '+L.totalW+' × '+L.totalH+' см\n'+
-    '• Площадь остекления: '+area.toFixed(2)+' м²\n'+
-    '• Уплотнитель по контуру: '+per.toFixed(1)+' м';
-  if(navigator.share){ navigator.share({title:'Балконный блок', text:txt}).catch(function(){}); }
-  else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ say('📋 Скопировано'); }).catch(function(){ say('Не удалось скопировать'); }); }
-  else { say('Буфер недоступен'); }
-};
-
-/* ---------------- СТАРТ ---------------- */
-if(location.hash==='#balcony'){ if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', window.openBalcony); } else { window.openBalcony(); } }
-window.openBalconyFromHash=window.openBalcony;
-
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
 })();
