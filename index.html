@@ -811,6 +811,7 @@ function renderSummary(){
 
       <div class="sec-t">Окно</div>
       <div class="sum">${winRows}</div>
+      ${isBalc?`<div class="sec-t">Схема балконного блока</div><div class="balc-box">${balcSVG()}</div>`:''}
 
       <div class="sec-t">${isNew?'Комплектация нового окна':'Резинки (уплотнитель)'}</div>
       <div class="sum">${rubRows}</div>
