@@ -731,6 +731,11 @@ function next(){
   const st = STEPS[cur];
   if(st.type==='info'){
     ask(st.ico,'Подтверди',st.t,'Комплект полный','Резинки новые, всё в комплекте','✓ Верно, дальше',()=>{ D[st.key]='Подтверждено'; goNext(); });
+  } else if(st.type==='balcony'){
+    ask('🚪','Проверь балконный блок','Дверь и глухое окно — точно как на схеме?',
+      'Дверь '+D.balcDoorH+' × '+D.balcDoorW+' мм',
+      'Глухое окно '+D.balcTopH+' × '+D.balcTopW+' мм · '+(D.balcSide||'—'),
+      '✓ Верно, дальше', ()=>{ goNext(); });
   } else if(st.type!=='opt'){
     ask(st.ico,'Проверь ответ',st.t,D[st.key],st.unit||'', '✓ Верно, дальше', ()=>{ goNext(); });
   } else goNext();
